@@ -1,88 +1,122 @@
-# Fuelio
+# Iritku
 
-Progressive Web App mobile-first untuk mencatat konsumsi dan biaya BBM motor
-dengan metode "isi penuh". Satu file `index.html` — CSS/JS inline, tanpa
-dependensi eksternal, tanpa build step, tanpa backend, tanpa akun.
+**Catat bensin, tahu Rp/km.**
 
-> **Catatan nama:** proyek ini kebetulan memakai nama "Fuelio" yang sama
-> dengan aplikasi navigasi/lalu lintas dari Sygic yang sudah ada dan tidak
-> berkaitan sama sekali. Lihat bagian **Masalah yang diketahui** di bawah.
+Iritku adalah Progressive Web App mobile-first untuk pemotor yang ingin tahu
+berapa sebenarnya biaya jalan motornya. Kamu mencatat satu kali pengisian —
+berapa jauh kamu jalan dan berapa liter yang masuk sampai tangki penuh lagi —
+lalu Iritku mengubahnya jadi kilometer per liter dan, yang lebih berguna,
+rupiah per kilometer. Isinya satu file `index.html` dengan CSS dan JS inline
+plus satu service worker: tanpa build step, tanpa backend, tanpa akun, tanpa
+pelacakan. Semua yang kamu masukkan tetap di HP kamu.
+
+Seluruh antarmukanya berbahasa Indonesia.
+
+[**Demo langsung →**](https://fuelio.netlify.app)
+
+## Tangkapan layar
+
+| Mode terang | Mode gelap |
+| --- | --- |
+| ![Iritku mode terang](docs/screenshots/light.png) | ![Iritku mode gelap](docs/screenshots/dark.png) |
 
 ## Fitur
 
-- **Input berbasis Rupiah.** Catat pengisian lewat nominal, harga per liter,
-  atau liter — isi dua dari tiga, sisanya dihitung otomatis. Harga default
-  per jenis BBM diingat dari koreksi terakhirmu.
-- **Dua mode jarak.** Trip meter, atau odometer dengan jarak dihitung
-  otomatis dari catatan sebelumnya. Isi sebagian (tangki belum penuh) dicatat
-  terpisah dan digabung ke rasio pengisian penuh berikutnya.
-- **Dashboard uang.** Biaya per kilometer, pengeluaran bulan ini, rincian per
-  bulan dengan tren naik/turun, dan grafik tren (km/L atau Rp/km) berbasis
-  canvas yang bisa disentuh untuk melihat titik tertentu.
-- **Pengingat pasif, bukan mengganggu.** Pengingat isi ulang berdasar
-  kebiasaanmu sendiri, dan pengingat backup begitu data sudah cukup banyak —
-  keduanya bisa ditutup, tidak ada yang memblokir.
-- **Dukungan offline sungguhan.** Service worker satu-origin (`sw.js`)
-  meng-cache aplikasi dan menyajikannya dengan strategi network-first dengan
-  timeout, jadi aplikasi tetap terbuka walau tanpa koneksi. Ada versi baru →
-  muncul ajakan di dalam aplikasi, bukan reload diam-diam.
-- **Bisa dipasang (installable).** Manifest dan ikon dibuat saat aplikasi
-  dimuat; ada ajakan pasang di dalam aplikasi untuk Android/desktop, dan
-  petunjuk sekali-tampil untuk iOS (yang tidak punya prompt install bawaan
-  browser).
-- **Kontrol backup penuh.** Ekspor CSV (ramah Excel, aman dari suntikan
-  formula), backup/restore JSON lengkap dengan pratinjau sebelum digabung
-  atau diganti, dan jalur karantina untuk baris data yang gagal validasi
-  supaya tidak dibuang diam-diam.
-- **Aksesibel secara default.** Kartu riwayat bisa dioperasikan lewat
-  keyboard, fokus dikembalikan ke elemen yang membuka dialog, pesan error
-  form diumumkan lewat pembaca layar, dan mode gerakan-minim penuh.
+### Pelacakan uang
+
+- **Input berbasis Rupiah.** Catat pengisian lewat total nominal, harga per
+  liter, atau liter — isi dua dari tiga, sisanya dihitung Iritku.
+- **Harga BBM diingat.** Tiap jenis BBM menyimpan harga terakhir yang kamu
+  koreksi, jadi entri berikutnya sudah hampir terisi sendiri.
+- **Dashboard biaya.** Rupiah per kilometer, pengeluaran bulan ini, dan rincian
+  per bulan dengan tren naik/turun dibanding bulan sebelumnya.
+
+### Efisiensi
+
+- **Metode isi penuh.** Cara klasiknya: isi penuh, jalan, isi penuh lagi, lalu
+  masukkan jaraknya dan liter yang masuk.
+- **Dua mode jarak.** Jarak dari trip meter, atau odometer dengan jarak
+  dihitung otomatis dari catatan sebelumnya.
+- **Isi sebagian ditangani benar.** Tangki yang belum penuh dicatat terpisah
+  dan digabung ke rasio pengisian penuh berikutnya, bukan merusak rata-rata.
+- **Grafik tren.** Grafik canvas km/L atau Rp/km dengan scrub sentuh, moving
+  average, dan pewarnaan berdasar ambang batas — digambar sendiri, tanpa
+  library chart.
+- **Riwayat berkode warna.** Tiap kartu pengisian ditandai hijau/kuning/merah
+  sesuai efisiensi, jadi tangki yang boros langsung kelihatan.
+
+### Keamanan data
+
+- **Backup dan restore JSON.** Ekspor lengkap, dan alur pemulihan dengan
+  pratinjau yang menunjukkan persis apa yang akan terjadi kalau digabung atau
+  diganti — sebelum kamu memutuskan.
+- **Ekspor CSV.** Ramah Excel (delimiter titik-koma, desimal koma) dan aman
+  dari suntikan formula.
+- **Karantina, bukan dibuang.** Baris data yang gagal validasi disisihkan dan
+  ditampilkan di Pengaturan lengkap dengan ekspor JSON mentah, bukan dihapus
+  diam-diam.
+- **Migrasi skema otomatis.** Data dari versi aplikasi yang lebih lama terbaca
+  tanpa langkah manual apa pun.
+- **Penyimpanan transaksional.** Kalau penulisan gagal, aplikasi mengembalikan
+  kondisinya dan render ulang, bukan menampilkan layar yang sudah tidak cocok
+  dengan penyimpanan. Kuota penyimpanan penuh langsung memunculkan tawaran
+  backup.
+- **Pengingat backup.** Begitu riwayatmu sudah cukup banyak untuk disayangkan
+  kalau hilang, Iritku mengingatkan untuk ekspor — bisa ditutup, tidak pernah
+  memblokir.
+
+### PWA
+
+- **Dukungan offline sungguhan.** Service worker satu-origin meng-cache
+  aplikasi dan menyajikannya dengan strategi network-first dengan timeout, jadi
+  Iritku tetap terbuka walau sama sekali tanpa koneksi.
+- **Bisa dipasang.** Manifest dan ikon dibuat saat aplikasi dimuat; ada ajakan
+  pasang di dalam aplikasi untuk Android dan desktop, serta petunjuk
+  Share-sheet sekali-tampil untuk iOS yang tidak punya prompt pasang bawaan
+  browser.
+- **Update yang jujur.** Versi baru memunculkan ajakan di dalam aplikasi dengan
+  reload eksplisit — bukan pergantian diam-diam saat tab masih terbuka.
 - **Mode gelap** mengikuti sistem secara default, bisa diubah manual.
+- **Aksesibel secara default.** Kartu riwayat bisa dioperasikan lewat keyboard,
+  fokus dikembalikan ke elemen yang membuka dialog, pesan error form diumumkan
+  pembaca layar, mode gerakan-minim penuh, dan layar crash yang tetap
+  memungkinkanmu mengekspor data.
 
-## Privasi
+## Mulai cepat
 
-**Data kamu tidak pernah meninggalkan HP kamu.** Semua tersimpan di
-`localStorage` browser pada perangkat yang kamu pakai — tidak ada server,
-tidak ada akun, tidak ada analitik, tidak ada permintaan jaringan yang
-dibuat aplikasi selain menyajikan file miliknya sendiri yang sudah di-cache.
-Uninstall aplikasi atau membersihkan data situs akan menghapusnya secara
-permanen — itulah sebabnya aplikasi mengingatkanmu untuk backup JSON secara
-berkala. Tidak ada yang pernah disinkronkan atau dibagikan kecuali kamu
-sendiri yang mengekspor filenya dan mengirimkannya.
-
-## Menjalankan
-
-Karena ada service worker, **aplikasi ini harus disajikan lewat `https://`
-atau `http://localhost`** — browser menolak mendaftarkan service worker dari
-URL `file://`, jadi membuka `index.html` langsung akan kehilangan dukungan
-offline saja (fitur lain tetap jalan). Untuk pengembangan lokal:
+Iritku harus disajikan lewat **`https://` atau `http://localhost`** — browser
+menolak mendaftarkan service worker dari URL `file://`, jadi membuka
+`index.html` langsung membuatmu kehilangan dukungan offline dan kemampuan
+dipasang (fitur lain tetap jalan). Secara lokal:
 
 ```bash
+git clone https://github.com/adenaufal/fuelio.git
+cd fuelio
 python3 -m http.server 8000
 # lalu buka http://localhost:8000/
 ```
 
-Untuk produksi bisa pakai hosting statis apa saja (GitHub Pages, Netlify,
-direktori nginx/Apache biasa, dll.) — tidak ada yang perlu di-build atau
-dikonfigurasi.
+Untuk produksi, hosting statis apa pun bisa — Netlify, GitHub Pages, direktori
+nginx/Apache biasa. Tidak ada yang perlu di-build atau dikonfigurasi.
 
 ## Cara pakai
 
-1. Tap **+** (atau "Catat pengisian pertama" saat pertama buka) untuk
-   mencatat pengisian.
-2. Isi jarak (trip atau odometer) dan liter; biaya/harga per liter opsional
-   dan saling mengisi otomatis.
+1. Tap **+** (atau "Catat pengisian pertama" saat pertama buka) untuk mencatat
+   pengisian.
+2. Isi jarak (trip atau odometer) dan liter; nominal dan harga per liter
+   opsional dan saling mengisi otomatis.
 3. Simpan — riwayat, statistik, dan grafik tren langsung diperbarui.
 4. Tap kartu untuk edit, atau pakai tombol **⋯** untuk edit/hapus. Hapus
-   bersifat optimistik dengan toast undo 5 detik.
-5. Buka ikon gear untuk Pengaturan: harga BBM default, mode pengisian jarak,
-   ekspor CSV/JSON, pulihkan backup, dan data contoh.
+   bersifat optimistik, dengan toast undo 5 detik.
+5. Buka ikon gear untuk Pengaturan: harga BBM default, mode input jarak, ekspor
+   CSV/JSON, pulihkan backup, dan data contoh.
 
-## Struktur data (localStorage, kunci `fuelTrackerData`)
+## Struktur data
 
-Bentuk data punya versi (`schemaVersion`) dan dimigrasikan otomatis — data
-lama dari versi aplikasi sebelumnya tetap terbaca tanpa langkah manual apa
-pun.
+Semuanya tersimpan di `localStorage` dengan kunci **`fuelTrackerData`**. Kunci
+itu peninggalan dari nama lama aplikasi dan sengaja dipertahankan: itulah yang
+sudah ada di instalasi pengguna sekarang, dan menggantinya akan membuat riwayat
+mereka jadi yatim.
 
 ```json
 {
@@ -108,30 +142,70 @@ pun.
 ```
 
 `ratio` (km/L) selalu dihitung saat ditampilkan, tidak pernah disimpan — ia
-hasil turunan dari distance/fuel, jadi menyimpan salinannya hanya akan
-membuat dua nilai itu berisiko tidak sinkron.
+turunan dari jarak dan liter, jadi menyimpan salinannya hanya akan membuat dua
+nilai itu berisiko tidak sinkron.
 
-## Catatan pengembangan
+**Backup dan restore.** Pengaturan → ekspor menulis file JSON bernama
+`iritku-backup-YYYY-MM-DD.json`. Pemulihan membaca file itu, menjalankannya
+lewat tangga migrasi yang sama dengan data tersimpan, dan menampilkan pratinjau
+hasil gabung atau ganti sebelum apa pun ditulis. Impor memvalidasi
+`schemaVersion` di dalam file, bukan nama filenya — backup yang diekspor dengan
+nama lama aplikasi tetap bisa dipulihkan. Untuk reset data lokal, hapus kunci
+`fuelTrackerData` di DevTools → Application/Storage.
 
-- Tidak ada build step; edit `index.html` langsung (CSS/JS inline).
-- `sw.js` adalah satu-satunya file pendamping yang diizinkan — service worker
-  tidak bisa didaftarkan dari URL Blob atau inline, harus dari URL skrip asli.
-- Manifest dan ikon aplikasi dibuat saat dimuat (canvas → PNG data URI,
-  disuntik sebagai `<link rel="manifest">` ber-URI `data:`), bukan file
-  terpisah.
-- Untuk reset data lokal, hapus kunci `fuelTrackerData` di DevTools →
-  Application/Storage. Backup JSON mentah bisa dipulihkan lewat Pengaturan.
+## Privasi
+
+**Data kamu tidak pernah meninggalkan HP kamu.** Semuanya tersimpan di
+`localStorage` browser pada perangkat yang kamu pakai. Tidak ada server, tidak
+ada akun, tidak ada analitik, dan tidak ada permintaan jaringan yang dibuat
+aplikasi sendiri selain menyajikan file miliknya yang sudah di-cache. Uninstall
+atau membersihkan data situs akan menghapusnya permanen — itulah persis alasan
+aplikasi mengingatkanmu untuk ekspor backup. Tidak ada yang disinkronkan atau
+dibagikan kecuali kamu sendiri yang mengekspor filenya dan mengirimkannya.
+
+## Roadmap
+
+Yang sudah dikerjakan dan yang sengaja ditunda (garasi multi-kendaraan, kartu
+statistik yang bisa dibagikan, lokalisasi Bahasa Inggris) ada di
+[`docs/ROADMAP-id.md`](docs/ROADMAP-id.md).
+
+## Status penggantian nama
+
+Aplikasi ini sebelumnya bernama **Fuelio**, yang bentrok dengan aplikasi
+navigasi mobil dari Sygic yang sudah mapan dan tidak berkaitan. Namanya sudah
+diganti jadi **Iritku** ("irit" + "-ku") di seluruh permukaan produk: judul
+halaman, header, manifest, nama file ekspor, dan nama cache. Kunci penyimpanan
+`fuelTrackerData` adalah satu-satunya pengecualian yang disengaja, dengan
+alasan kompatibilitas di atas.
+
+Dua hal masih di luar jangkauan perubahan kode:
+
+- **Nama repositori dan subdomain Netlify masih `fuelio`.** Mengganti nama repo
+  GitHub dan situs Netlify adalah langkah manual pemilik repo; tautan demo di
+  atas akan berubah setelah itu dilakukan.
+- **Belum ada penelusuran merek formal.** Sebelum ada pemasaran berbayar atau
+  pendaftaran di app store dengan nama Iritku, penelusuran PDKI (basis data
+  merek Indonesia, kelas 9 dan 42) sangat disarankan.
 
 ## Masalah yang diketahui
 
-- **Konflik nama:** "Fuelio" juga merupakan nama aplikasi navigasi
-  mobil/pendeteksi kamera kecepatan dari Sygic yang sudah mapan dan tidak
-  berkaitan. Proyek ini sama sekali tidak berafiliasi dengannya. Kalau
-  aplikasi ini suatu saat dipublikasikan ke app store atau didistribusikan
-  secara luas, sebaiknya diganti nama lebih dulu — dicatat di `ROADMAP.md`,
-  belum dikerjakan di rilis ini.
-- Jarak hanya bisa ditempel manual dari Google Maps (salin angkanya, tempel
-  ke kolom, atau pakai helper clipboard di form) — tidak ada integrasi API
-  pengambil rute, memang disengaja (lihat `ROADMAP.md`).
-- Dukungan offline dan ajakan pasang aplikasi butuh HTTPS atau `localhost`;
-  membuka file langsung (`file://`) hanya menonaktifkan service worker.
+- Jarak dari Google Maps harus dimasukkan manual — salin angkanya lalu tempel
+  ke kolomnya, atau pakai helper clipboard di form. Tidak ada integrasi API
+  pengambil rute, memang disengaja (lihat
+  [`docs/ROADMAP-id.md`](docs/ROADMAP-id.md)).
+- Dukungan offline dan ajakan pasang butuh HTTPS atau `localhost`. Membuka file
+  langsung lewat `file://` hanya menonaktifkan service worker; sisanya tetap
+  jalan.
+
+## Catatan pengembangan
+
+- Tidak ada build step — edit `index.html` langsung (CSS dan JS inline).
+- `sw.js` adalah satu-satunya file pendamping yang diizinkan; service worker
+  tidak bisa didaftarkan dari URL Blob atau inline, harus dari URL skrip asli.
+- Manifest dan ikon aplikasi dibuat saat dimuat (canvas → PNG data URI), bukan
+  file terpisah.
+- Konvensi untuk agen dan kontributor, termasuk resep verifikasi, ada di
+  [`AGENTS.md`](AGENTS.md). Brief v1 aslinya disimpan sebagai arsip di
+  [`docs/SPEC.md`](docs/SPEC.md) dan sudah tidak akurat.
+
+Versi Bahasa Inggris dokumen ini: [`README.md`](README.md).

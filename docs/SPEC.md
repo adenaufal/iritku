@@ -1,3 +1,15 @@
+> **Historical document — v1 spec, superseded.**
+> This is the original brief the first version of the app was built from (then
+> called "Fuel Consumption Tracker"). It is kept for provenance only and is
+> **not** an accurate description of the shipped product: the app is now
+> **Iritku**, its data model is at `schemaVersion: 2`, and several things listed
+> here as "Out of Scope" (fuel-cost workflows in particular) have since shipped.
+> For what the codebase actually does today, read `AGENTS.md` and the READMEs;
+> for what is planned, read `docs/ROADMAP.md`. Original content follows
+> unchanged below.
+
+---
+
 # Fuel Consumption Tracker PWA
 
 ## Context & Requirements

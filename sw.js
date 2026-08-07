@@ -1,4 +1,4 @@
-// Fuelio service worker.
+// Iritku service worker.
 //
 // This has to be a real file: a Blob/inline URL can never be registered as a
 // service worker (the spec requires an http(s) script URL), so index.html's
@@ -7,7 +7,10 @@
 //
 // index.html registers this as `sw.js?v=<APP_VERSION>` — the query string
 // gives each release its own cache name without touching this file.
-const CACHE_PREFIX = 'fuel-';
+const CACHE_PREFIX = 'iritku-';
+// Caches from before the Fuel Tracker -> Iritku rename used this prefix;
+// clean those up too so upgraded installs don't leak the old cache forever.
+const LEGACY_CACHE_PREFIX = 'fuel-';
 const CACHE_NAME = CACHE_PREFIX + (new URL(self.location.href).searchParams.get('v') || 'dev');
 const NAV_TIMEOUT_MS = 3000;
 
@@ -35,7 +38,9 @@ self.addEventListener('activate', (event) => {
       }
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter((key) => (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) || key.startsWith(LEGACY_CACHE_PREFIX))
+          .map((key) => caches.delete(key))
       );
       await self.clients.claim();
     })()
