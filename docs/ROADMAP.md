@@ -65,9 +65,16 @@ Recorded here on purpose, not forgotten:
   separated to make an i18n layer straightforward later, but no language
   switcher exists yet.
 
-## Known issue carried forward
+## Resolved since
 
-- **Naming conflict with Sygic's "Fuelio".** An existing, unrelated
-  navigation app already uses this name on app stores. A rename is
-  recommended before any public/store distribution, but is explicitly out of
-  scope for this release — see the README's Known Issues section.
+- **Naming conflict with Sygic's "Fuelio" — resolved by rename.** The app is
+  now **Iritku** ("irit" + "-ku"), applied across the title, header, manifest,
+  export filenames, and cache names. The `fuelTrackerData` localStorage key was
+  deliberately left alone so existing installs keep their history.
+
+## Owner follow-ups (not code)
+
+- Rename the GitHub repository and the Netlify site — both still read `fuelio`,
+  so the demo URL will change once that's done.
+- Run a formal PDKI trademark search (classes 9 and 42) before any paid
+  marketing or app-store listing under the Iritku name.

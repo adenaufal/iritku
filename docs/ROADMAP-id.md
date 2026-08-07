@@ -68,9 +68,17 @@ Dicatat sengaja, bukan terlupa:
   ditampilkan ke pengguna supaya lapisan i18n mudah ditambahkan nanti, tapi
   belum ada pengalih bahasa.
 
-## Isu diketahui yang dibawa terus
+## Sudah beres
 
-- **Konflik nama dengan "Fuelio" milik Sygic.** Ada aplikasi navigasi yang
-  sudah ada dan tidak berkaitan memakai nama ini di app store. Penggantian
-  nama disarankan sebelum distribusi publik/app store, tapi sengaja di luar
-  cakupan rilis ini — lihat bagian Masalah Diketahui di README.
+- **Konflik nama dengan "Fuelio" milik Sygic — beres lewat penggantian nama.**
+  Aplikasinya sekarang bernama **Iritku** ("irit" + "-ku"), diterapkan di judul
+  halaman, header, manifest, nama file ekspor, dan nama cache. Kunci
+  localStorage `fuelTrackerData` sengaja tidak diubah supaya riwayat pengguna
+  yang sudah ada tetap terbaca.
+
+## Tindak lanjut pemilik (bukan kode)
+
+- Ganti nama repositori GitHub dan situs Netlify — keduanya masih tertulis
+  `fuelio`, jadi URL demo akan berubah setelah itu.
+- Lakukan penelusuran merek PDKI (kelas 9 dan 42) sebelum ada pemasaran
+  berbayar atau pendaftaran app store dengan nama Iritku.

@@ -7,8 +7,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; manifest-src data: 'self'; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none';">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Fuel Tracker">
-  <title>Fuel Tracker</title>
+  <meta name="apple-mobile-web-app-title" content="Iritku">
+  <title>Iritku — Catatan BBM & Biaya Motor</title>
   <style>
     /* ---------- Design tokens ---------- */
     :root {
@@ -1402,7 +1402,7 @@
   <header id="app-header">
     <div class="head-inner">
       <div class="head-row">
-        <h1 class="app-name">Fuel Tracker</h1>
+        <h1 class="app-name">Iritku</h1>
         <div class="head-actions">
           <button type="button" id="theme-toggle" class="icon-btn" aria-label="Ubah tema">🌓</button>
           <button type="button" id="settings-btn" class="icon-btn" aria-label="Pengaturan dan cadangan data">⚙️</button>
@@ -1649,8 +1649,10 @@
   <script>
     /* ============================== CONFIG ============================== */
 
-    const APP_VERSION = '2.0.0';
+    const APP_VERSION = '2.1.0';
     const SCHEMA_VERSION = 2;
+    // Legacy key name kept deliberately (app was renamed Fuel Tracker -> Iritku)
+    // so existing users' localStorage data keeps loading after the update.
     const STORAGE_KEY = 'fuelTrackerData';
     const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
     const BACKUP_NUDGE_DAYS = 60;
@@ -2527,7 +2529,7 @@
           items.push({
             key: 'install',
             tone: 'info',
-            message: 'Pasang Fuel Tracker sebagai aplikasi supaya lebih cepat dibuka.',
+            message: 'Pasang Iritku sebagai aplikasi supaya lebih cepat dibuka.',
             actionLabel: 'Pasang',
             action: () => {
               const evt = deferredInstallPrompt;
@@ -3853,7 +3855,7 @@
         ].map(csvCell).join(';');
       });
       const csv = '﻿' + [header.join(';')].concat(rows).join('\r\n');
-      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `fuelio-${todayISO()}.csv`);
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `iritku-${todayISO()}.csv`);
       notify('CSV diekspor.', 'info');
     }
 
@@ -3867,7 +3869,7 @@
       };
       downloadBlob(
         new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
-        `fuelio-backup-${todayISO()}.json`
+        `iritku-backup-${todayISO()}.json`
       );
       state.data.settings.lastBackupAt = Date.now();
       state.data.settings.backupNudgeDismissedAt = null;
@@ -3886,7 +3888,7 @@
       };
       downloadBlob(
         new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
-        `fuelio-quarantine-${todayISO()}.json`
+        `iritku-quarantine-${todayISO()}.json`
       );
     }
 
@@ -3913,7 +3915,7 @@
       reader.onload = () => {
         const parsed = safeParse(String(reader.result || ''));
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          showImportMessage('File bukan backup Fuel Tracker yang valid.', true);
+          showImportMessage('File bukan backup Iritku yang valid.', true);
           return;
         }
         const hydrated = hydrate(parsed);
@@ -4010,7 +4012,7 @@
       elements.quarantineGroup.hidden = state.data.quarantine.length === 0;
       elements.quarantineInfo.textContent = `${state.data.quarantine.length} catatan tidak bisa dibaca dan tidak dihitung di statistik. Ekspor JSON mentahnya kalau mau diperbaiki manual.`;
 
-      if (elements.appVersionInfo) elements.appVersionInfo.textContent = `Fuel Tracker v${APP_VERSION}`;
+      if (elements.appVersionInfo) elements.appVersionInfo.textContent = `Iritku v${APP_VERSION}`;
     }
 
     function openSettings() {
@@ -4576,9 +4578,9 @@
 
       const manifest = {
         id: path,
-        name: 'Fuel Tracker',
-        short_name: 'Fuel',
-        description: 'Catat konsumsi BBM motor dengan metode isi penuh. Semua data tersimpan di HP kamu.',
+        name: 'Iritku',
+        short_name: 'Iritku',
+        description: 'Iritku: catat konsumsi BBM motor dengan metode isi penuh. Semua data tersimpan di HP kamu.',
         start_url: path,
         scope: scopeDir,
         display: 'standalone',
