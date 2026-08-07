@@ -2,27 +2,70 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1e293b">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; manifest-src data: 'self'; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none';">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fuel Tracker">
   <title>Fuel Tracker</title>
   <style>
+    /* ---------- Design tokens ---------- */
     :root {
+      color-scheme: light dark;
+
       --primary: #3b82f6;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
-      --bg: #ffffff;
-      --surface: #f8fafc;
+
+      --bg: #f6f8fb;
+      --surface: #ffffff;
       --text: #0f172a;
       --muted: #64748b;
-      --panel: rgba(15, 23, 42, 0.06);
-      --shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-      --spacing: 0.5rem;
-      --radius: 0.9rem;
-      --border: rgba(15, 23, 42, 0.08);
-      --fab-size: 3.6rem;
-      --field: #f8fafc;
-      color-scheme: light dark;
+      --panel: rgba(15, 23, 42, 0.045);
+      --border: rgba(15, 23, 42, 0.10);
+      --field: #f4f6fa;
+      --scrim: rgba(15, 23, 42, 0.45);
+
+      /* Fluid type scale */
+      --step--1: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
+      --step-0: clamp(0.94rem, 0.92rem + 0.12vw, 1rem);
+      --step-1: clamp(1.08rem, 1.02rem + 0.32vw, 1.28rem);
+      --step-2: clamp(1.3rem, 1.16rem + 0.7vw, 1.65rem);
+      --step-3: clamp(1.95rem, 1.55rem + 2vw, 2.75rem);
+
+      /* 4px spacing ramp */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-7: 2rem;
+      --space-8: 2.5rem;
+
+      --r-sm: 0.5rem;
+      --r-md: 0.875rem;
+      --r-lg: 1.25rem;
+      --r-pill: 999px;
+
+      /* Elevation ladder */
+      --e1: 0 1px 2px rgba(15, 23, 42, 0.06);
+      --e2: 0 2px 10px rgba(15, 23, 42, 0.10);
+      --e3: 0 12px 30px rgba(15, 23, 42, 0.16);
+
+      /* Motion vocabulary */
+      --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --ease-spring: cubic-bezier(0.2, 1.25, 0.35, 1);
+      --dur-1: 120ms;
+      --dur-2: 220ms;
+      --dur-3: 320ms;
+
+      --fab-size: 3.5rem;
+      --header-h: 8.5rem;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -31,13 +74,13 @@
         --surface: #0f172a;
         --field: #111a2d;
         --text: #e5e7eb;
-        --muted: #cbd5e1;
+        --muted: #94a3b8;
         --panel: rgba(255, 255, 255, 0.05);
-        --shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
         --border: rgba(255, 255, 255, 0.12);
-      }
-      body {
-        background: radial-gradient(120% 120% at 20% 20%, rgba(59, 130, 246, 0.08), transparent 55%), var(--bg);
+        --scrim: rgba(2, 6, 23, 0.6);
+        --e1: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --e2: 0 2px 10px rgba(0, 0, 0, 0.45);
+        --e3: 0 16px 40px rgba(0, 0, 0, 0.55);
       }
     }
 
@@ -46,359 +89,999 @@
       --surface: #0f172a;
       --field: #111a2d;
       --text: #e5e7eb;
-      --muted: #cbd5e1;
+      --muted: #94a3b8;
       --panel: rgba(255, 255, 255, 0.05);
-      --shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       --border: rgba(255, 255, 255, 0.12);
+      --scrim: rgba(2, 6, 23, 0.6);
+      --e1: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --e2: 0 2px 10px rgba(0, 0, 0, 0.45);
+      --e3: 0 16px 40px rgba(0, 0, 0, 0.55);
     }
 
     * { box-sizing: border-box; }
 
+    /* Author display rules (label/section grids) outrank the UA [hidden] rule. */
+    [hidden] { display: none !important; }
+
     body {
       margin: 0;
-      font-family: "Sora", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      background: radial-gradient(120% 120% at 20% 20%, rgba(59, 130, 246, 0.06), transparent 55%), var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      min-height: 100dvh;
+      font-size: var(--step-0);
+      line-height: 1.45;
       -webkit-font-smoothing: antialiased;
     }
 
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      z-index: 10;
-      padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3);
+    .num {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
     }
 
-    .theme-fab {
-      position: fixed;
-      left: calc(var(--spacing) * 3);
-      bottom: calc(var(--spacing) * 3.5);
-      width: var(--fab-size);
-      height: var(--fab-size);
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--field);
-      color: var(--text);
-      box-shadow: var(--shadow);
-      font-size: 1.3rem;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      z-index: 9;
+    .unit {
+      font-size: 0.45em;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0;
+      margin-left: 0.22em;
     }
-
-    .theme-fab:hover { transform: translateY(-2px) scale(1.02); }
-    .theme-fab:active { transform: translateY(0); box-shadow: none; }
 
     .bar {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      height: 0.25rem;
+      height: 0.2rem;
       background: linear-gradient(90deg, var(--primary), var(--success), var(--warning));
-      opacity: 0.6;
-      z-index: 11;
+      opacity: 0.7;
+      z-index: 30;
     }
 
-    #banner {
-      display: none;
-      background: var(--danger);
-      color: #fff;
-      padding: var(--spacing) calc(var(--spacing) * 3);
-      font-weight: 600;
-      text-align: center;
+    /* ---------- Sticky stats header ---------- */
+
+    #scroll-sentinel {
+      position: absolute;
+      top: 0;
+      height: 1px;
+      width: 1px;
+      pointer-events: none;
     }
 
-    main {
+    header#app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--surface);
+      padding: calc(var(--space-3) + var(--safe-t)) var(--space-4) var(--space-3);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+    }
+
+    header#app-header.is-compact {
+      border-bottom-color: var(--border);
+      box-shadow: var(--e1);
+    }
+
+    .head-inner {
       max-width: 720px;
       margin: 0 auto;
-      padding: 8.5rem calc(var(--spacing) * 3) calc(var(--spacing) * 9);
+    }
+
+    .head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+
+    .app-name {
+      margin: 0;
+      font-weight: 800;
+      font-size: var(--step-1);
+      letter-spacing: -0.02em;
+    }
+
+    .head-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: var(--field);
+      color: var(--text);
+      border-radius: var(--r-pill);
+      width: 2.5rem;
+      height: 2.5rem;
+      display: grid;
+      place-items: center;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: transform var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
+    }
+
+    .icon-btn:active { transform: scale(0.94); }
+
+    .stats-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--space-4);
+    }
+
+    .hero { min-width: 0; }
+
+    .hero .label {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: var(--step--1);
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: var(--space-1);
+    }
+
+    .hero-main .value {
+      font-size: var(--step-3);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+      transition: font-size var(--dur-2) var(--ease-out);
+    }
+
+    .hero-side {
+      text-align: right;
+      padding-bottom: 0.35em;
+    }
+
+    .hero-side .value {
+      font-size: var(--step-1);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      overflow-wrap: anywhere;
+    }
+
+    .hero-sub {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: var(--step--1);
+      margin-top: var(--space-2);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      overflow: hidden;
+      max-height: 3.4rem;
+      transition: max-height var(--dur-2) var(--ease-out), opacity var(--dur-2) var(--ease-out), margin var(--dur-2) var(--ease-out);
     }
 
     .stats {
       display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: 1fr;
-      gap: var(--spacing);
-      overflow-x: auto;
-      padding-bottom: var(--spacing);
-      scrollbar-width: thin;
-      -ms-overflow-style: none;
-    }
-
-    .stats::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .stats::-webkit-scrollbar-thumb {
-      background: var(--panel);
-      border-radius: 999px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      overflow: hidden;
+      max-height: 6rem;
+      transition: max-height var(--dur-2) var(--ease-out), opacity var(--dur-2) var(--ease-out), margin var(--dur-2) var(--ease-out);
     }
 
     .stat {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: calc(var(--spacing) * 2);
-      min-width: 150px;
-      backdrop-filter: blur(8px);
+      border-radius: var(--r-md);
+      padding: var(--space-2) var(--space-3);
+      min-width: 0;
     }
 
     .stat .label {
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: calc(var(--spacing) * 1.5);
       display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-size: 0.66rem;
+      color: var(--muted);
+      font-weight: 700;
     }
 
     .stat .value {
-      font-size: 1.2rem;
+      font-size: var(--step-0);
+      font-weight: 700;
+      margin-top: 0.1rem;
+      overflow-wrap: anywhere;
+    }
+
+    header#app-header.is-compact .hero-main .value { font-size: var(--step-1); }
+    header#app-header.is-compact .hero-sub,
+    header#app-header.is-compact .stats {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
+    header#app-header.is-compact .hero-side { padding-bottom: 0; }
+
+    /* Delta chips */
+    .chip-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+      font-weight: 700;
+      font-size: var(--step--1);
+      border-radius: var(--r-pill);
+      padding: 0.1rem 0.45rem;
+      background: var(--panel);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .chip-delta.good {
+      color: var(--success);
+      background: color-mix(in srgb, var(--success) 14%, transparent);
+    }
+
+    .chip-delta.bad {
+      color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 14%, transparent);
+    }
+
+    /* ---------- Main layout ---------- */
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: var(--space-4) var(--space-4) calc(var(--fab-size) + var(--space-8) + var(--safe-b));
+      display: grid;
+      gap: var(--space-5);
+    }
+
+    .section-title {
+      font-size: var(--step--1);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 var(--space-2);
       font-weight: 700;
     }
 
-    .history {
+    /* ---------- Nudges (passive, inline) ---------- */
+
+    .nudges {
       display: grid;
-      gap: calc(var(--spacing) * 2);
+      gap: var(--space-2);
     }
+
+    .nudges:empty { display: none; }
+
+    .nudge {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--r-md);
+      box-shadow: var(--e1);
+      padding: var(--space-3);
+      font-size: var(--step--1);
+      line-height: 1.4;
+    }
+
+    .nudge.danger { border-left-color: var(--danger); }
+    .nudge.warning { border-left-color: var(--warning); }
+    .nudge .nudge-text { flex: 1; min-width: 0; }
+
+    .nudge .nudge-action {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      font-size: inherit;
+      font-family: inherit;
+    }
+
+    .nudge .nudge-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 0.15rem;
+    }
+
+    /* ---------- Trend chart ---------- */
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--e1);
+      padding: var(--space-4);
+    }
+
+    .chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+
+    .chart-head .section-title { margin: 0; }
+
+    .chart-wrap {
+      position: relative;
+      height: 172px;
+      touch-action: pan-y;
+    }
+
+    .chart-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .chart-note {
+      color: var(--muted);
+      font-size: var(--step--1);
+      margin-top: var(--space-2);
+    }
+
+    .chart-placeholder {
+      display: grid;
+      place-items: center;
+      gap: var(--space-2);
+      text-align: center;
+      padding: var(--space-6) var(--space-4);
+      color: var(--muted);
+      font-size: var(--step--1);
+    }
+
+    .chart-placeholder .spark { color: var(--primary); opacity: 0.5; }
+
+    /* ---------- Monthly breakdown ---------- */
+
+    .monthly { display: grid; gap: var(--space-2); }
+    .monthly:empty { display: none; }
+
+    .month-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      box-shadow: var(--e1);
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .month-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-2);
+      font-weight: 700;
+      margin-bottom: var(--space-1);
+    }
+
+    .month-head .amount {
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--space-2);
+    }
+
+    .month-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      color: var(--muted);
+      font-size: var(--step--1);
+    }
+
+    /* ---------- History ---------- */
+
+    .history { display: grid; gap: var(--space-3); }
 
     .card {
       position: relative;
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: calc(var(--spacing) * 2.5);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 8px;
-      background: var(--bar, var(--success));
-    }
-
-    .card .delete-hint {
-      position: absolute;
-      top: calc(var(--spacing));
-      right: calc(var(--spacing));
-      color: var(--muted);
-      font-size: 0.85rem;
-      opacity: 0.6;
-    }
-
-    .card .meta {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: var(--spacing);
-      font-weight: 700;
-      margin-bottom: var(--spacing);
+      gap: var(--space-3);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--e1);
+      padding: var(--space-3);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 92px;
+      transition: box-shadow var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
     }
 
-    .card .sub {
-      display: flex;
-      gap: calc(var(--spacing) * 1.5);
-      color: var(--muted);
-      font-size: 0.95rem;
-      flex-wrap: wrap;
+    .card:active { box-shadow: var(--e2); }
+    .card.is-pressing { transform: scale(0.98); }
+
+    .card .badge {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      min-width: 4.6rem;
+      padding: var(--space-2) var(--space-2);
+      border-radius: var(--r-md);
+      background: color-mix(in srgb, var(--tone, var(--muted)) 14%, transparent);
+      color: var(--tone, var(--muted));
+      font-weight: 800;
+      font-size: var(--step-1);
+      line-height: 1.1;
+      text-align: center;
     }
+
+    .card .badge .badge-text {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .card .badge .unit {
+      display: block;
+      font-size: 0.62rem;
+      margin: 0.1rem 0 0;
+      color: inherit;
+      opacity: 0.8;
+      letter-spacing: 0.04em;
+    }
+
+    .card-main { min-width: 0; }
+
+    .card-date {
+      font-weight: 700;
+      font-size: var(--step-0);
+    }
+
+    .card-facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 0.35rem;
+      color: var(--muted);
+      font-size: var(--step--1);
+      margin-top: 0.1rem;
+    }
+
+    /* Separator lives inside the following item so it never dangles at a line break. */
+    .card-facts > span + span::before {
+      content: "·";
+      opacity: 0.45;
+      margin-right: 0.35rem;
+    }
+
+    .card-meta { opacity: 0.8; }
 
     .card .notes {
-      margin-top: var(--spacing);
+      margin-top: var(--space-1);
       color: var(--text);
-      opacity: 0.9;
+      opacity: 0.85;
+      font-size: var(--step--1);
       white-space: pre-line;
+      overflow-wrap: anywhere;
     }
 
-    .empty {
-      text-align: center;
-      padding: calc(var(--spacing) * 6) calc(var(--spacing) * 3);
-      color: var(--muted);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      background: var(--panel);
+    .card-trail {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-1);
     }
+
+    .card-menu {
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-radius: var(--r-pill);
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background var(--dur-1) var(--ease-out);
+    }
+
+    .card-menu:active { background: var(--panel); }
+
+    .tag {
+      display: inline-block;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      padding: 0.02rem 0.45rem;
+      font-size: 0.7rem;
+    }
+
+    /* ---------- Empty state / onboarding ---------- */
+
+    .empty-state {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: var(--space-3);
+      padding: var(--space-7) var(--space-4) var(--space-6);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--e1);
+    }
+
+    .empty-state .mark {
+      width: 96px;
+      height: 96px;
+      color: var(--primary);
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      font-size: var(--step-2);
+      letter-spacing: -0.02em;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--step--1);
+      max-width: 30ch;
+    }
+
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+      display: grid;
+      gap: var(--space-2);
+      text-align: left;
+      width: 100%;
+      max-width: 24rem;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 1.5rem 1fr;
+      gap: var(--space-2);
+      align-items: start;
+      font-size: var(--step--1);
+      color: var(--muted);
+    }
+
+    .steps li::before {
+      content: counter(step);
+      display: grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: var(--r-pill);
+      background: color-mix(in srgb, var(--primary) 14%, transparent);
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+
+    .empty-actions {
+      display: grid;
+      gap: var(--space-2);
+      width: 100%;
+      max-width: 24rem;
+    }
+
+    .block { width: 100%; }
+
+    /* ---------- FAB + coach mark ---------- */
 
     #fab {
       position: fixed;
-      right: calc(var(--spacing) * 3);
-      bottom: calc(var(--spacing) * 3.5);
+      right: var(--space-4);
+      bottom: calc(var(--space-4) + var(--safe-b));
       width: var(--fab-size);
       height: var(--fab-size);
       border-radius: 50%;
       border: none;
       background: var(--primary);
       color: #fff;
-      box-shadow: var(--shadow);
+      box-shadow: var(--e3);
       font-size: 1.7rem;
+      line-height: 1;
       cursor: pointer;
       display: grid;
       place-items: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      z-index: 9;
+      transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+      z-index: 25;
     }
 
-    #fab:hover { transform: translateY(-2px) scale(1.02); }
-    #fab:active { transform: translateY(0); }
+    #fab:active { transform: scale(0.94); }
+
+    .coach {
+      position: fixed;
+      right: var(--space-4);
+      bottom: calc(var(--fab-size) + var(--space-6) + var(--safe-b));
+      max-width: 15rem;
+      background: var(--text);
+      color: var(--bg);
+      border-radius: var(--r-md);
+      box-shadow: var(--e3);
+      padding: var(--space-3);
+      font-size: var(--step--1);
+      line-height: 1.35;
+      z-index: 26;
+      animation: coach-in var(--dur-3) var(--ease-spring) both;
+    }
+
+    .coach::after {
+      content: "";
+      position: absolute;
+      right: 1.4rem;
+      bottom: -6px;
+      width: 12px;
+      height: 12px;
+      background: var(--text);
+      transform: rotate(45deg);
+    }
+
+    .coach button {
+      display: block;
+      margin-top: var(--space-2);
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 700;
+      font-family: inherit;
+      font-size: inherit;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    @keyframes coach-in {
+      from { opacity: 0; transform: translateY(8px) scale(0.96); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Toasts ---------- */
+
+    .toasts {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(var(--fab-size) + var(--space-5) + var(--safe-b));
+      width: min(30rem, calc(100vw - var(--space-8)));
+      display: grid;
+      gap: var(--space-2);
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .toasts > div { display: grid; gap: var(--space-2); }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--text);
+      color: var(--bg);
+      border-radius: var(--r-md);
+      box-shadow: var(--e3);
+      padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+      font-size: var(--step--1);
+      line-height: 1.35;
+      animation: toast-in var(--dur-3) var(--ease-out) both;
+    }
+
+    .toast.is-leaving { animation: toast-out var(--dur-2) var(--ease-out) both; }
+    .toast .toast-msg { flex: 1; min-width: 0; }
+
+    .toast.tone-danger { background: var(--danger); color: #fff; }
+    .toast.tone-warning { background: var(--warning); color: #0f172a; }
+
+    .toast .toast-action {
+      background: none;
+      border: none;
+      color: inherit;
+      font-weight: 800;
+      font-family: inherit;
+      font-size: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: var(--space-1) var(--space-2);
+      white-space: nowrap;
+    }
+
+    .toast .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      opacity: 0.7;
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: var(--space-1);
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: none; }
+      to { opacity: 0; transform: translateY(6px) scale(0.98); }
+    }
+
+    /* ---------- Dialogs / bottom sheets ---------- */
 
     dialog {
       width: min(560px, 92vw);
       border: none;
-      border-radius: 1.2rem;
+      border-radius: var(--r-lg);
       padding: 0;
       background: transparent;
       box-shadow: none;
-      max-height: 90vh;
+      max-height: 90dvh;
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      transition:
+        opacity var(--dur-2) var(--ease-out),
+        transform var(--dur-3) var(--ease-out),
+        overlay var(--dur-3) var(--ease-out) allow-discrete,
+        display var(--dur-3) var(--ease-out) allow-discrete;
+    }
+
+    dialog[open] { opacity: 1; transform: none; }
+
+    @starting-style {
+      dialog[open] { opacity: 0; transform: translateY(12px) scale(0.98); }
+    }
+
+    @supports not (transition-behavior: allow-discrete) {
+      dialog[open] { opacity: 0; transform: translateY(12px) scale(0.98); }
+      dialog[open].is-open { opacity: 1; transform: none; }
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(4px);
+      background: var(--scrim);
+      backdrop-filter: blur(3px);
     }
 
-    .modal {
+    .modal, .sheet {
       background: var(--surface);
-      border-radius: 1.2rem;
+      border-radius: inherit;
       border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      padding: calc(var(--spacing) * 3);
-      max-height: 90vh;
+      box-shadow: var(--e3);
+      max-height: 90dvh;
       overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .modal { padding: var(--space-5) var(--space-5) 0; }
+
+    .grab {
+      width: 36px;
+      height: 4px;
+      border-radius: var(--r-pill);
+      background: var(--border);
+      margin: 0 auto var(--space-3);
+      display: none;
     }
 
     .modal header {
-      position: static;
       background: transparent;
       box-shadow: none;
-      padding: 0 0 calc(var(--spacing) * 2);
+      padding: 0 0 var(--space-3);
+      position: static;
     }
 
-    .modal h2 { margin: 0; font-size: 1.35rem; }
+    .modal h2 { margin: 0; font-size: var(--step-2); letter-spacing: -0.02em; }
+    .modal h3 { margin: 0 0 var(--space-2); font-size: var(--step-0); }
 
-    .help {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: var(--spacing);
-      position: relative;
-    }
-
-    .help .info {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.2rem;
-      height: 1.2rem;
-      border-radius: 50%;
-      background: var(--panel);
+    .explainer {
       border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--panel);
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .explainer > summary {
+      cursor: pointer;
       font-weight: 700;
-      color: var(--text);
-      position: relative;
-      cursor: default;
+      font-size: var(--step--1);
+      color: var(--primary);
+      list-style: none;
     }
 
-    .help .info::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      left: -0.25rem;
-      top: 140%;
-      transform: translate(0, -6px);
-      background: var(--text);
-      color: var(--bg);
-      padding: 0.6rem 0.75rem;
-      border-radius: 0.75rem;
-      width: min(260px, 82vw);
-      font-size: 0.85rem;
-      line-height: 1.3;
-      z-index: 20;
-      box-shadow: var(--shadow);
-      white-space: normal;
-      opacity: 0;
-      pointer-events: none;
-      visibility: hidden;
-      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-    }
+    .explainer > summary::-webkit-details-marker { display: none; }
 
-    .help .info:hover::after {
-      opacity: 1;
-      visibility: visible;
-      transform: translate(0, 0);
+    .explainer .explainer-body {
+      margin-top: var(--space-2);
+      color: var(--muted);
+      font-size: var(--step--1);
+      line-height: 1.5;
     }
 
     form {
       display: grid;
-      gap: calc(var(--spacing) * 2);
-      margin-top: calc(var(--spacing) * 2);
+      gap: var(--space-4);
     }
 
     label {
       display: flex;
       flex-direction: column;
-      gap: calc(var(--spacing) / 2);
+      gap: var(--space-1);
       font-weight: 600;
+      font-size: var(--step--1);
     }
 
-    input, textarea {
+    label.check {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    label.check input {
+      width: auto;
+      flex: none;
+      min-width: 1.1rem;
+      min-height: 1.1rem;
+    }
+
+    input, textarea, select {
       width: 100%;
-      padding: calc(var(--spacing) * 1.5);
-      border-radius: var(--radius);
+      padding: var(--space-3);
+      border-radius: var(--r-md);
       border: 1px solid var(--border);
       background: var(--field);
       color: var(--text);
       font-size: 1rem;
+      font-weight: 500;
       outline: none;
-      transition: border 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
+      transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
 
-    input::placeholder,
-    textarea::placeholder {
+    input::placeholder, textarea::placeholder {
       color: var(--muted);
-      opacity: 0.9;
+      opacity: 0.85;
+      font-weight: 400;
     }
 
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
     }
 
-    textarea { min-height: 90px; resize: vertical; }
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .lbl { display: block; }
+
+    input[aria-invalid="true"] { border-color: var(--danger); }
+
+    textarea { min-height: 80px; resize: vertical; }
 
     .error {
       color: var(--danger);
-      font-size: 0.9rem;
+      font-size: var(--step--1);
       min-height: 1.1em;
+      font-weight: 500;
     }
+
+    .hint {
+      color: var(--muted);
+      font-size: var(--step--1);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .opt {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: none;
+    }
+
+    .preview {
+      font-size: var(--step--1);
+      font-weight: 700;
+      color: var(--tone, var(--muted));
+      min-height: 1.2em;
+    }
+
+    .seg {
+      display: inline-flex;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-family: inherit;
+      font-size: var(--step--1);
+      padding: 0.35rem 0.8rem;
+      border-radius: var(--r-pill);
+      cursor: pointer;
+      transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+    }
+
+    .seg-btn[aria-pressed="true"] {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .seg-sm .seg-btn { padding: 0.25rem 0.65rem; font-size: 0.75rem; }
+
+    .mode-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--field);
+      color: var(--text);
+      border-radius: var(--r-pill);
+      padding: 0.4rem 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      font-size: var(--step--1);
+      cursor: pointer;
+      transition: transform var(--dur-1) var(--ease-out);
+    }
+
+    .chip:active { transform: scale(0.96); }
 
     .actions {
       display: flex;
       justify-content: flex-end;
-      gap: var(--spacing);
-      margin-top: calc(var(--spacing) * 1.5);
+      gap: var(--space-2);
+      flex-wrap: wrap;
     }
 
-    button.secondary, button.primary {
+    .modal > .actions,
+    .modal form > .actions {
+      position: sticky;
+      bottom: 0;
+      margin: var(--space-4) calc(var(--space-5) * -1) 0;
+      padding: var(--space-4) var(--space-5) calc(var(--space-4) + var(--safe-b));
+      background: linear-gradient(180deg, transparent, var(--surface) 42%);
+    }
+
+    button.secondary, button.primary, button.danger {
       border: none;
-      border-radius: var(--radius);
-      padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5);
+      border-radius: var(--r-md);
+      padding: var(--space-3) var(--space-5);
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      font-family: inherit;
+      font-size: var(--step-0);
+      transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), opacity var(--dur-2) var(--ease-out);
     }
 
     button.secondary {
@@ -410,39 +1093,155 @@
     button.primary {
       background: var(--primary);
       color: #fff;
-      box-shadow: var(--shadow);
+      box-shadow: var(--e2);
     }
 
+    button.danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:active, button.primary:active, button.danger:active { transform: scale(0.97); }
+
     button:disabled {
-      opacity: 0.6;
+      opacity: 0.55;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
 
-    .map-helper {
-      display: grid;
-      gap: calc(var(--spacing) * 1);
-      margin-top: calc(var(--spacing) * 0.5);
+    /* ---------- Action + confirm sheets ---------- */
+
+    .sheet { padding: var(--space-4) var(--space-4) calc(var(--space-4) + var(--safe-b)); }
+
+    .sheet-title {
+      font-weight: 800;
+      font-size: var(--step-1);
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-1);
     }
 
-    .helper-hint {
+    .sheet-text {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: var(--step--1);
+      margin-bottom: var(--space-4);
     }
 
-    .helper-error {
-      color: var(--danger);
-      font-size: 0.9rem;
-      min-height: 1.1em;
-    }
+    .sheet-list { display: grid; gap: var(--space-1); margin-top: var(--space-3); }
 
-    .helper-actions {
+    .sheet-item {
       display: flex;
-      gap: var(--spacing);
       align-items: center;
+      gap: var(--space-3);
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--step-0);
+      font-weight: 600;
+      text-align: left;
+      padding: var(--space-3);
+      border-radius: var(--r-md);
+      cursor: pointer;
+    }
+
+    .sheet-item:active { background: var(--panel); }
+    .sheet-item.danger { color: var(--danger); }
+    .sheet-item.muted { color: var(--muted); justify-content: center; }
+
+    .sheet-actions {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: flex-end;
       flex-wrap: wrap;
     }
+
+    /* ---------- Onboarding ---------- */
+
+    .onboard-slide {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: var(--space-3);
+      padding: var(--space-4) 0 var(--space-5);
+    }
+
+    .onboard-slide h2 {
+      margin: 0;
+      font-size: var(--step-2);
+      letter-spacing: -0.02em;
+    }
+
+    .onboard-slide p {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--step--1);
+      max-width: 32ch;
+    }
+
+    .onboard-slide .mark { width: 84px; height: 84px; color: var(--primary); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-2);
+      width: 100%;
+    }
+
+    .flow-step {
+      display: grid;
+      justify-items: center;
+      gap: var(--space-1);
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .flow-step svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+      border-radius: var(--r-md);
+      padding: 6px;
+    }
+
+    .dots { display: flex; gap: var(--space-1); justify-content: center; margin-bottom: var(--space-3); }
+
+    .dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--r-pill);
+      background: var(--border);
+      transition: width var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+    }
+
+    .dots span.on { width: 18px; background: var(--primary); }
+
+    /* ---------- Map helper / settings ---------- */
+
+    .map-helper {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--space-2) var(--space-3);
+      background: var(--panel);
+    }
+
+    .map-helper > summary {
+      cursor: pointer;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: var(--step--1);
+    }
+
+    .map-helper .map-body { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+
+    .helper-hint { color: var(--muted); font-size: var(--step--1); }
+    .helper-error { color: var(--danger); font-size: var(--step--1); min-height: 1.1em; }
+    .helper-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 
     .secondary-link {
       display: inline-flex;
@@ -451,20 +1250,46 @@
       text-decoration: none;
       color: var(--primary);
       font-weight: 700;
+      font-size: var(--step--1);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: calc(var(--spacing) * 1.1) calc(var(--spacing) * 1.5);
+      border-radius: var(--r-md);
+      padding: var(--space-2) var(--space-3);
       background: var(--field);
-      transition: transform 0.15s ease, box-shadow 0.2s ease;
     }
 
-    .secondary-link:active {
-      transform: translateY(0);
-      box-shadow: none;
+    .settings-group {
+      display: grid;
+      gap: var(--space-2);
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-group:last-of-type { border-bottom: none; }
+    .settings-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+    .settings-actions button { padding: var(--space-2) var(--space-4); font-size: var(--step--1); }
+
+    .price-row { display: flex; align-items: center; gap: var(--space-2); }
+    .price-row span { flex: 1; font-size: var(--step--1); min-width: 0; }
+
+    .price-row input {
+      width: 8.5rem;
+      flex: none;
+      padding: var(--space-2) var(--space-3);
+      text-align: right;
+    }
+
+    .import-summary {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--space-3);
+      background: var(--panel);
+      display: grid;
+      gap: var(--space-2);
+      font-size: var(--step--1);
     }
 
     .cta-pulse {
-      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 45%, transparent);
       animation: pulse 1.4s ease-out 0s 3;
     }
 
@@ -474,154 +1299,482 @@
       100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
     }
 
+    /* ---------- List motion ---------- */
+
+    .card.is-stagger {
+      animation: card-in var(--dur-3) var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 28ms);
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .card.is-new { animation: card-flash 600ms var(--ease-out) both; }
+
+    @keyframes card-flash {
+      from { background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
+      to { background: var(--surface); }
+    }
+
+    /* ---------- Mobile bottom sheet ---------- */
+
     @media (max-width: 640px) {
       dialog {
-        width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        margin: 0;
+        width: 100%;
+        max-width: none;
+        margin: auto auto 0;
+        max-height: 92dvh;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+        transform: translateY(100%);
       }
-      .modal {
-        height: 100%;
-        border-radius: 0;
-        padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) calc(var(--spacing) * 5);
-        overflow-y: auto;
+
+      @starting-style {
+        dialog[open] { transform: translateY(100%); }
       }
-      main { padding: 9.5rem calc(var(--spacing) * 2.5) calc(var(--spacing) * 9); }
-      #fab { right: calc(var(--spacing) * 2.5); }
-      .theme-fab { left: calc(var(--spacing) * 2.5); }
+
+      @supports not (transition-behavior: allow-discrete) {
+        dialog[open] { transform: translateY(100%); }
+        dialog[open].is-open { transform: none; }
+      }
+
+      .modal, .sheet {
+        max-height: 92dvh;
+        border-radius: inherit;
+        border-bottom: none;
+      }
+
+      .grab { display: block; }
+      main { padding-left: var(--space-3); padding-right: var(--space-3); }
+      .card { padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3); gap: var(--space-2); }
+      .stats-hero { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--space-2); }
+    }
+
+    /* ---------- Crash recovery screen ---------- */
+
+    .crash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: var(--scrim);
+      display: grid;
+      place-items: center;
+      padding: var(--space-4);
+    }
+
+    .crash-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--e3);
+      padding: var(--space-4);
+      max-width: 26rem;
+      width: 100%;
+    }
+
+    /* ---------- Reduced motion kill switch ---------- */
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
 <body>
   <div class="bar" aria-hidden="true"></div>
-  <div id="banner"></div>
-  <header>
-    <div class="stats" id="stats"></div>
+  <div id="scroll-sentinel" aria-hidden="true"></div>
+
+  <div id="crash-screen" class="crash-screen" role="alertdialog" aria-labelledby="crash-title" aria-describedby="crash-text" hidden>
+    <div class="crash-card">
+      <div class="sheet-title" id="crash-title">Terjadi kesalahan</div>
+      <div class="sheet-text" id="crash-text">Aplikasi berhenti karena masalah tak terduga. Data kamu tetap tersimpan di HP — ekspor dulu untuk jaga-jaga, lalu muat ulang.</div>
+      <div class="sheet-actions">
+        <button type="button" class="secondary" id="crash-export">Ekspor JSON</button>
+        <button type="button" class="primary" id="crash-reload">Muat ulang</button>
+      </div>
+    </div>
+  </div>
+  <header id="app-header">
+    <div class="head-inner">
+      <div class="head-row">
+        <h1 class="app-name">Fuel Tracker</h1>
+        <div class="head-actions">
+          <button type="button" id="theme-toggle" class="icon-btn" aria-label="Ubah tema">🌓</button>
+          <button type="button" id="settings-btn" class="icon-btn" aria-label="Pengaturan dan cadangan data">⚙️</button>
+        </div>
+      </div>
+      <div class="stats-hero" id="stats-hero"></div>
+      <div class="stats" id="stats"></div>
+    </div>
   </header>
+
   <main>
+    <div class="nudges" id="nudges"></div>
+
+    <section class="chart-card" id="chart-card" hidden>
+      <div class="chart-head">
+        <h2 class="section-title">Tren konsumsi</h2>
+        <div class="seg seg-sm" id="series-toggle" role="group" aria-label="Pilih data grafik">
+          <button type="button" class="seg-btn" data-series="ratio" aria-pressed="true">km/L</button>
+          <button type="button" class="seg-btn" data-series="cost" aria-pressed="false">Rp/km</button>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chart-wrap">
+        <canvas id="trend-canvas" role="img" aria-label="Grafik tren konsumsi BBM"></canvas>
+      </div>
+      <div class="chart-note" id="chart-note"></div>
+      <div class="chart-placeholder" id="chart-placeholder" hidden></div>
+    </section>
+
+    <section class="monthly" id="monthly"></section>
     <section class="history" id="history"></section>
   </main>
-  <button id="fab" aria-label="Tambah catatan">+</button>
-  <button id="theme-toggle" class="theme-fab" aria-label="Ubah tema">🌓</button>
 
-  <dialog id="entry-dialog">
+  <button id="fab" aria-label="Tambah catatan">+</button>
+
+  <div class="toasts" id="toasts">
+    <div id="toast-polite" role="status" aria-live="polite"></div>
+    <div id="toast-alert" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <dialog id="entry-dialog" aria-labelledby="form-title">
     <div class="modal">
+      <div class="grab" aria-hidden="true"></div>
       <header>
         <h2 id="form-title">Catat Pengisian</h2>
-        <div class="help">
-          <span class="info" tabindex="0" data-tooltip="Cara ukur: Isi fulltank → Catat KM → Pakai motor → Isi fulltank lagi → Input jarak & liter yang masuk">i</span>
-          <span>Metode full-tank untuk akurasi.</span>
-        </div>
       </header>
       <form id="entry-form" novalidate>
-        <label for="distance">
-          Jarak Tempuh (km)
-          <input type="text" inputmode="decimal" id="distance" name="distance" required placeholder="Dari isi penuh ke isi penuh">
-          <div class="error" id="distance-error"></div>
-        </label>
-        <div class="map-helper">
-          <div class="helper-actions" id="map-helper-actions">
-            <a class="secondary-link" id="map-helper-open" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Buka Google Maps</a>
-            <button type="button" class="secondary" id="map-helper-paste">Tempel &amp; Isi</button>
+        <details class="explainer" id="method-explainer">
+          <summary>ℹ️ Cara ukur</summary>
+          <div class="explainer-body">
+            Isi tangki sampai penuh → catat angka KM → pakai motor seperti biasa → isi penuh lagi →
+            masukkan jarak yang ditempuh dan liter yang masuk. Hasilnya konsumsi sebenarnya, bukan tebakan.
           </div>
-          <div class="helper-hint">Salin jarak dari Google Maps, contoh: 12,3 km. Bisa tempel langsung di kolom jarak atau klik Tempel &amp; Isi.</div>
-          <div class="helper-error" id="map-helper-error"></div>
+        </details>
+
+        <div class="mode-row">
+          <span class="hint">Cara isi jarak</span>
+          <div class="seg" role="group" aria-label="Mode pengisian jarak">
+            <button type="button" class="seg-btn" data-mode="trip" aria-pressed="true">Jarak tempuh</button>
+            <button type="button" class="seg-btn" data-mode="odometer" aria-pressed="false">Odometer</button>
+          </div>
         </div>
+
+        <label for="odometer" id="odometer-field" hidden>
+          Odometer sekarang (km)
+          <input type="text" inputmode="decimal" id="odometer" name="odometer" placeholder="Angka odometer saat isi">
+          <div class="hint" id="odometer-derived"></div>
+          <div class="error" id="odometer-error" aria-live="polite"></div>
+        </label>
+
+        <label for="distance" id="distance-field">
+          Jarak Tempuh (km)
+          <input type="text" inputmode="decimal" id="distance" name="distance" placeholder="Dari isi penuh ke isi penuh">
+          <div class="error" id="distance-error" aria-live="polite"></div>
+        </label>
+
+        <details class="map-helper" id="map-helper">
+          <summary>Ambil jarak dari Google Maps</summary>
+          <div class="map-body">
+            <div class="helper-actions" id="map-helper-actions">
+              <a class="secondary-link" id="map-helper-open" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Buka Google Maps</a>
+              <button type="button" class="secondary" id="map-helper-paste">Tempel &amp; Isi</button>
+            </div>
+            <div class="helper-hint">Salin jarak dari Google Maps, contoh: 12,3 km. Bisa tempel langsung di kolom jarak atau klik Tempel &amp; Isi.</div>
+            <div class="helper-error" id="map-helper-error" aria-live="polite"></div>
+          </div>
+        </details>
+
+        <label for="fuel-type">
+          <span class="lbl">Jenis BBM <span class="opt">opsional</span></span>
+          <select id="fuel-type" name="fuelType"></select>
+        </label>
+
+        <div class="chips" id="amount-chips" aria-label="Nominal cepat">
+          <button type="button" class="chip" data-amount="20000">Rp 20rb</button>
+          <button type="button" class="chip" data-amount="30000">Rp 30rb</button>
+          <button type="button" class="chip" data-amount="50000">Rp 50rb</button>
+        </div>
+
+        <label for="cost">
+          <span class="lbl">Uang yang dibayar (Rp) <span class="opt">opsional</span></span>
+          <input type="text" inputmode="numeric" id="cost" name="cost" autocomplete="off" placeholder="Misal: 30rb">
+          <div class="error" id="cost-error" aria-live="polite"></div>
+        </label>
+
+        <label for="price">
+          <span class="lbl">Harga per liter (Rp) <span class="opt">opsional</span></span>
+          <input type="text" inputmode="numeric" id="price" name="price" autocomplete="off" placeholder="Otomatis dari jenis BBM">
+          <div class="error" id="price-error" aria-live="polite"></div>
+        </label>
+
         <label for="fuel">
           BBM untuk Isi Penuh (L)
-          <input type="number" inputmode="decimal" id="fuel" name="fuel" min="0.001" max="99" step="0.001" required placeholder="Berapa liter sampai tangki penuh lagi">
-          <div class="error" id="fuel-error"></div>
+          <input type="text" inputmode="decimal" id="fuel" name="fuel" autocomplete="off" placeholder="Berapa liter sampai tangki penuh lagi">
+          <div class="preview" id="fuel-preview"></div>
+          <div class="error" id="fuel-error" aria-live="polite"></div>
         </label>
+
+        <div>
+          <label class="check" for="partial">
+            <input type="checkbox" id="partial" name="partial">
+            Isi sebagian (tangki tidak penuh)
+          </label>
+          <div class="hint">Liter dan jarak dibawa ke pengisian berikutnya. Rasio baru dihitung saat isi penuh.</div>
+        </div>
+
         <label for="date">
           Tanggal
           <input type="date" id="date" name="date" required>
-          <div class="error" id="date-error"></div>
+          <div class="error" id="date-error" aria-live="polite"></div>
         </label>
         <label for="notes">
           Catatan (opsional)
           <textarea id="notes" name="notes" maxlength="200" placeholder="Misal: Full throttle test"></textarea>
-          <div class="error" id="notes-error"></div>
+          <div class="error" id="notes-error" aria-live="polite"></div>
         </label>
         <div class="actions">
           <button type="button" class="secondary" id="cancel-btn">Batal</button>
-          <button type="submit" class="primary" id="submit-btn" disabled>Simpan</button>
+          <button type="submit" class="primary" id="submit-btn">Simpan</button>
         </div>
       </form>
     </div>
   </dialog>
 
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <div class="modal">
+      <div class="grab" aria-hidden="true"></div>
+      <header>
+        <h2 id="settings-title">Pengaturan</h2>
+      </header>
+
+      <section class="settings-group">
+        <h3>Mode pengisian jarak</h3>
+        <label class="check"><input type="radio" name="entry-mode" value="trip"> Jarak tempuh (trip meter)</label>
+        <label class="check"><input type="radio" name="entry-mode" value="odometer"> Odometer (jarak dihitung otomatis)</label>
+      </section>
+
+      <section class="settings-group">
+        <h3>Harga BBM default</h3>
+        <div class="hint">Dipakai otomatis saat memilih jenis BBM. Akan diperbarui sendiri kalau kamu koreksi harga saat mencatat.</div>
+        <div id="price-settings"></div>
+      </section>
+
+      <section class="settings-group">
+        <h3>Cadangan &amp; ekspor</h3>
+        <div class="settings-actions">
+          <button type="button" class="secondary" id="export-csv">Ekspor CSV</button>
+          <button type="button" class="secondary" id="export-json">Backup JSON</button>
+          <button type="button" class="secondary" id="import-btn">Pulihkan backup</button>
+          <input type="file" id="import-file" accept="application/json,.json" hidden>
+        </div>
+        <div class="import-summary" id="import-summary" hidden aria-live="polite"></div>
+        <div class="hint" id="backup-info"></div>
+        <div class="hint" id="storage-info"></div>
+        <div class="hint" id="app-version-info"></div>
+      </section>
+
+      <section class="settings-group" id="sample-group" hidden>
+        <h3>Data contoh</h3>
+        <div class="hint">5 catatan contoh sedang ditampilkan supaya kamu bisa lihat cara kerjanya.</div>
+        <div class="settings-actions">
+          <button type="button" class="danger" id="clear-sample">Hapus data contoh</button>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h3>Bantuan</h3>
+        <div class="settings-actions">
+          <button type="button" class="secondary" id="replay-intro">Lihat panduan lagi</button>
+        </div>
+      </section>
+
+      <section class="settings-group" id="quarantine-group" hidden>
+        <h3>Catatan bermasalah</h3>
+        <div class="hint" id="quarantine-info"></div>
+        <div class="settings-actions">
+          <button type="button" class="secondary" id="export-quarantine">Ekspor JSON mentah</button>
+          <button type="button" class="danger" id="clear-quarantine">Buang</button>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="primary" id="settings-close">Tutup</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="action-sheet" aria-labelledby="action-sheet-title">
+    <div class="sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <div class="sheet-title" id="action-sheet-title">Catatan</div>
+      <div class="sheet-text" id="action-sheet-sub"></div>
+      <div class="sheet-list">
+        <button type="button" class="sheet-item" id="action-edit" autofocus>✏️ Edit catatan</button>
+        <button type="button" class="sheet-item danger" id="action-delete">🗑️ Hapus</button>
+        <button type="button" class="sheet-item muted" id="action-cancel">Batal</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <div class="sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <div class="sheet-title" id="confirm-title">Konfirmasi</div>
+      <div class="sheet-text" id="confirm-text"></div>
+      <div class="sheet-actions">
+        <button type="button" class="secondary" id="confirm-cancel" autofocus>Batal</button>
+        <button type="button" class="primary" id="confirm-ok">Ya</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="onboard-dialog" aria-labelledby="onboard-title">
+    <div class="sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <div id="onboard-body"></div>
+      <div class="dots" id="onboard-dots"></div>
+      <div class="sheet-actions">
+        <button type="button" class="secondary" id="onboard-skip">Lewati</button>
+        <button type="button" class="primary" id="onboard-next">Lanjut</button>
+      </div>
+    </div>
+  </dialog>
+
   <script>
-    const manifest = {
-      name: "Fuel Tracker",
-      short_name: "Fuel",
-      start_url: "/",
-      display: "standalone",
-      theme_color: "#1e293b",
-      background_color: "#ffffff",
-      icons: [
-        { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%231e293b'/%3E%3Cpath d='M38 32h28c10 0 18 8 18 18v48c0 8-6 14-14 14H38c-8 0-14-6-14-14V46c0-8 6-14 14-14Z' fill='%23fff'/%3E%3Cpath d='M76 28c10 0 18 8 18 18v34h6c6 0 10-4 10-10v-9c0-6-2-11-6-15l-8-8V28h-8v18l10 10c2 2 4 6 4 10v4c0 2-2 4-4 4h-4V46c0-10-8-18-18-18H44c-10 0-18 8-18 18v44c0 10 8 18 18 18h32c10 0 18-8 18-18V46c0-10-8-18-18-18H44c-10 0-18 8-18 18' fill='%233b82f6'/%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
-        { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' rx='56' fill='%231e293b'/%3E%3Cpath d='M76 64h80c18 0 32 14 32 32v96c0 14-10 24-24 24H76c-14 0-24-10-24-24V88c0-14 10-24 24-24Z' fill='%23fff'/%3E%3Cpath d='M156 56c18 0 32 14 32 32v68h10c10 0 18-8 18-18v-20c0-10-4-20-12-26l-16-14V56h-16v34l18 16c4 4 6 10 6 16v8c0 4-4 8-8 8h-6V88c0-18-14-32-32-32H92c-18 0-32 14-32 32v100c0 18 14 32 32 32h64c18 0 32-14 32-32V88c0-18-14-32-32-32H92c-18 0-32 14-32 32' fill='%233b82f6'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
-      ]
+    /* ============================== CONFIG ============================== */
+
+    const APP_VERSION = '2.0.0';
+    const SCHEMA_VERSION = 2;
+    const STORAGE_KEY = 'fuelTrackerData';
+    const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+    const BACKUP_NUDGE_DAYS = 60;
+    const BACKUP_NUDGE_MIN_ENTRIES = 20;
+
+    const FUEL_TYPES = ['Pertalite', 'Pertamax', 'Pertamax Turbo', 'Dexlite', 'Shell Super', 'Shell V-Power', 'BP 92', 'Lainnya'];
+
+    const DEFAULT_FUEL_PRICES = {
+      'Pertalite': 10000,
+      'Pertamax': 12500,
+      'Pertamax Turbo': 13500,
+      'Dexlite': 13500,
+      'Shell Super': 12800,
+      'Shell V-Power': 13600,
+      'BP 92': 12800,
+      'Lainnya': 12000,
     };
 
-    const swScript = `
-      const CACHE_NAME = 'fuel-tracker-v1';
-      const URLS = ['.', '/'];
-      self.addEventListener('install', (event) => {
-        event.waitUntil(
-          caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS)).then(() => self.skipWaiting())
-        );
-      });
-      self.addEventListener('activate', (event) => {
-        event.waitUntil(
-          caches.keys().then((keys) =>
-            Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-          ).then(() => self.clients.claim())
-        );
-      });
-      self.addEventListener('fetch', (event) => {
-        if (event.request.method !== 'GET') return;
-        event.respondWith(
-          caches.match(event.request).then((cached) => {
-            if (cached) return cached;
-            return fetch(event.request).then((response) => {
-              if (!response || response.status !== 200 || response.type === 'opaque') return response;
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-              return response;
-            }).catch(() => cached);
-          })
-        );
-      });
-    `;
+    // App mark on a 128x128 grid: fuel droplet over a gauge sweep.
+    // Shared by the inline SVG empty state and the runtime-rendered PNG icons.
+    const MARK_DROP = 'M64 20 C64 20 44 46 44 62 a20 20 0 0 0 40 0 C84 46 64 20 64 20 Z';
+    const MARK_ARC = 'M100 89 A44 44 0 0 1 28 89';
+    const BRAND_BG = '#0f172a';
+    const BRAND_ACCENT = '#3b82f6';
+
+    const SAMPLE_PREFIX = 'sample_';
+
+    // Realistic Jakarta-commuter numbers; ids carry SAMPLE_PREFIX so one tap clears them.
+    const SAMPLE_ENTRIES = [
+      { days: 42, distance: 168, fuel: 4.2, type: 'Pertalite', price: 10000, notes: '' },
+      { days: 33, distance: 152, fuel: 4.05, type: 'Pertalite', price: 10000, notes: 'Macet terus' },
+      { days: 24, distance: 181, fuel: 4.3, type: 'Pertamax', price: 12500, notes: '' },
+      { days: 14, distance: 176, fuel: 4.1, type: 'Pertamax', price: 12500, notes: 'Ban baru' },
+      { days: 5, distance: 164, fuel: 4.35, type: 'Pertalite', price: 10000, notes: '' },
+    ];
 
     const qs = (sel) => document.querySelector(sel);
-    const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
     const elements = {
+      header: qs('#app-header'),
+      statsHero: qs('#stats-hero'),
       stats: qs('#stats'),
+      monthly: qs('#monthly'),
+      nudges: qs('#nudges'),
       history: qs('#history'),
       fab: qs('#fab'),
       dialog: qs('#entry-dialog'),
-      modal: qs('.modal'),
       form: qs('#entry-form'),
       formTitle: qs('#form-title'),
       submit: qs('#submit-btn'),
       cancel: qs('#cancel-btn'),
-      banner: qs('#banner'),
       distance: qs('#distance'),
+      distanceField: qs('#distance-field'),
+      odometer: qs('#odometer'),
+      odometerField: qs('#odometer-field'),
+      odometerDerived: qs('#odometer-derived'),
+      fuelType: qs('#fuel-type'),
+      cost: qs('#cost'),
+      price: qs('#price'),
       fuel: qs('#fuel'),
+      partial: qs('#partial'),
       date: qs('#date'),
       notes: qs('#notes'),
-      themeToggle: qs('#theme-toggle'),
+      chips: qs('#amount-chips'),
+      preview: qs('#fuel-preview'),
+      modeButtons: Array.from(document.querySelectorAll('.seg-btn[data-mode]')),
+      seriesButtons: Array.from(document.querySelectorAll('.seg-btn[data-series]')),
+      sentinel: qs('#scroll-sentinel'),
+      chartCard: qs('#chart-card'),
+      chartWrap: qs('#chart-wrap'),
+      chartCanvas: qs('#trend-canvas'),
+      chartNote: qs('#chart-note'),
+      chartPlaceholder: qs('#chart-placeholder'),
+      toasts: qs('#toasts'),
+      toastPolite: qs('#toast-polite'),
+      toastAlert: qs('#toast-alert'),
+      actionSheet: qs('#action-sheet'),
+      actionTitle: qs('#action-sheet-title'),
+      actionSub: qs('#action-sheet-sub'),
+      actionEdit: qs('#action-edit'),
+      actionDelete: qs('#action-delete'),
+      actionCancel: qs('#action-cancel'),
+      confirmDialog: qs('#confirm-dialog'),
+      confirmTitle: qs('#confirm-title'),
+      confirmText: qs('#confirm-text'),
+      confirmOk: qs('#confirm-ok'),
+      confirmCancel: qs('#confirm-cancel'),
+      onboardDialog: qs('#onboard-dialog'),
+      onboardBody: qs('#onboard-body'),
+      onboardDots: qs('#onboard-dots'),
+      onboardNext: qs('#onboard-next'),
+      onboardSkip: qs('#onboard-skip'),
+      sampleGroup: qs('#sample-group'),
+      clearSample: qs('#clear-sample'),
+      replayIntro: qs('#replay-intro'),
+      mapHelper: qs('#map-helper'),
       mapError: qs('#map-helper-error'),
-      mapActions: qs('#map-helper-actions'),
       mapOpen: qs('#map-helper-open'),
       mapPaste: qs('#map-helper-paste'),
-      mapCta: qs('#map-helper-paste'),
+      themeToggle: qs('#theme-toggle'),
+      settingsBtn: qs('#settings-btn'),
+      settingsDialog: qs('#settings-dialog'),
+      settingsClose: qs('#settings-close'),
+      priceSettings: qs('#price-settings'),
+      exportCsv: qs('#export-csv'),
+      exportJson: qs('#export-json'),
+      importBtn: qs('#import-btn'),
+      importFile: qs('#import-file'),
+      importSummary: qs('#import-summary'),
+      backupInfo: qs('#backup-info'),
+      storageInfo: qs('#storage-info'),
+      appVersionInfo: qs('#app-version-info'),
+      crashScreen: qs('#crash-screen'),
+      crashExport: qs('#crash-export'),
+      crashReload: qs('#crash-reload'),
+      quarantineGroup: qs('#quarantine-group'),
+      quarantineInfo: qs('#quarantine-info'),
+      exportQuarantine: qs('#export-quarantine'),
+      clearQuarantine: qs('#clear-quarantine'),
       errors: {
         distance: qs('#distance-error'),
+        odometer: qs('#odometer-error'),
+        cost: qs('#cost-error'),
+        price: qs('#price-error'),
         fuel: qs('#fuel-error'),
         date: qs('#date-error'),
         notes: qs('#notes-error'),
@@ -630,21 +1783,187 @@
 
     const state = {
       data: null,
+      derived: new Map(),
       editId: null,
       storageSupported: true,
       mapIntent: false,
       mediaQuery: null,
+      formMode: 'trip',
+      odoBaseline: null,
+      touched: {},
+      submitted: false,
+      formErrors: {},
+      triadOrder: [],
+      formSnapshot: '',
+      backdropDown: false,
+      messages: [],
+      dismissed: { refill: false },
+      pendingImport: null,
+      toasts: new Map(),
+      chartSeries: 'ratio',
+      chartPoints: [],
+      scrubIndex: null,
+      chartReveal: 1,
+      animateList: true,
+      flashId: null,
+      heroKey: null,
+      heroValue: null,
+      heroRaf: null,
+      actionId: null,
+      confirmResolve: null,
+      onboardStep: 0,
+      coachTimer: null,
     };
 
-    const defaultData = {
-      entries: [],
-      settings: { darkMode: 'auto', language: 'id' },
+    /* ============================== UTILS ============================== */
+
+    const nfCache = new Map();
+    function nf(opts) {
+      const key = JSON.stringify(opts || {});
+      let inst = nfCache.get(key);
+      if (!inst) {
+        inst = new Intl.NumberFormat('id-ID', opts);
+        nfCache.set(key, inst);
+      }
+      return inst;
+    }
+
+    const DATE_FMT = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    const MONTH_FMT = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
+
+    function formatNumber(value, opts = {}) {
+      if (typeof value !== 'number' || !isFinite(value)) return '-';
+      return nf(opts).format(value);
+    }
+
+    function formatFuel(fuel) {
+      if (fuel < 1) return formatNumber(fuel, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+      return formatNumber(fuel, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatRupiah(value) {
+      if (typeof value !== 'number' || !isFinite(value)) return '-';
+      return 'Rp ' + formatNumber(Math.round(value), { maximumFractionDigits: 0 });
+    }
+
+    function formatRpPerKm(value) {
+      if (typeof value !== 'number' || !isFinite(value)) return '-';
+      return 'Rp ' + formatNumber(value, { maximumFractionDigits: value < 100 ? 1 : 0 });
+    }
+
+    function formatDate(ts) {
+      return DATE_FMT.format(new Date(ts));
+    }
+
+    function escapeHtml(text) {
+      return String(text == null ? '' : text)
+        .replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char] || char));
+    }
+
+    function todayISO(d = new Date()) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function id() {
+      return `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    // Accepts "12,3 km", "12.3", "2,4 L". Comma or dot both mean decimal point here.
+    function parseDecimal(text) {
+      if (text == null) return null;
+      const normalized = String(text).trim().replace(',', '.');
+      const match = normalized.match(/(\d+(?:\.\d+)?)/);
+      if (!match) return null;
+      const value = parseFloat(match[1]);
+      if (!isFinite(value)) return null;
+      return value;
+    }
+
+    // Accepts "30.000", "30rb", "30k", "1,5jt", "Rp 12.500".
+    function parseRupiah(text) {
+      if (text == null) return null;
+      let s = String(text).toLowerCase().replace(/\s+/g, '');
+      if (!s) return null;
+      s = s.replace(/^rp\.?/, '');
+      let mult = 1;
+      if (/(jt|juta)$/.test(s)) { mult = 1e6; s = s.replace(/(jt|juta)$/, ''); }
+      else if (/(rb|ribu|k)$/.test(s)) { mult = 1e3; s = s.replace(/(rb|ribu|k)$/, ''); }
+      s = s.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+      if (!s) return null;
+      const value = parseFloat(s);
+      if (!isFinite(value) || value < 0) return null;
+      return Math.round(value * mult);
+    }
+
+    function safeParse(raw) {
+      try {
+        return JSON.parse(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function daysBetween(a, b) {
+      return Math.floor((a - b) / 86400000);
+    }
+
+    function median(values) {
+      if (!values.length) return null;
+      const sorted = values.slice().sort((x, y) => x - y);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    const byTimeAsc = (a, b) => (a.timestamp - b.timestamp) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+    /* ============================== STORE ============================== */
+
+    const defaultSettings = {
+      darkMode: 'auto',
+      language: 'id',
+      entryMode: 'trip',
+      fuelPrices: { ...DEFAULT_FUEL_PRICES },
+      lastFuelType: null,
+      persistRequested: false,
+      lastBackupAt: null,
+      backupNudgeDismissedAt: null,
+      onboarded: false,
+      seenIntro: false,
+      sampleDataLoaded: false,
+      chartSeries: 'ratio',
+      iosInstallHintShown: false,
     };
 
     const freshData = () => ({
+      schemaVersion: SCHEMA_VERSION,
       entries: [],
-      settings: { ...defaultData.settings },
+      settings: { ...defaultSettings, fuelPrices: { ...DEFAULT_FUEL_PRICES } },
+      quarantine: [],
     });
+
+    // Keyed by the version being migrated FROM.
+    const MIGRATIONS = {
+      1: (data) => {
+        const entries = Array.isArray(data.entries) ? data.entries : [];
+        return {
+          ...data,
+          schemaVersion: 2,
+          entries: entries.map((e) => {
+            if (!e || typeof e !== 'object') return e;
+            const { ratio, ...rest } = e; // ratio is derived now, not stored
+            return {
+              fuelType: null,
+              fuelCost: null,
+              pricePerLiter: null,
+              odometer: null,
+              isPartialFill: false,
+              ...rest,
+            };
+          }),
+        };
+      },
+    };
 
     function supportsLocalStorage() {
       try {
@@ -657,73 +1976,199 @@
       }
     }
 
-    function safeParse(raw) {
-      try {
-        return JSON.parse(raw);
-      } catch (_) {
-        return null;
-      }
-    }
-
     function validateEntry(entry) {
       if (!entry || typeof entry !== 'object') return false;
-      return typeof entry.id === 'string'
-        && typeof entry.date === 'string'
-        && typeof entry.timestamp === 'number'
-        && typeof entry.distance === 'number'
-        && entry.distance > 0
-        && typeof entry.fuel === 'number'
-        && entry.fuel > 0;
+      if (typeof entry.id !== 'string' || !entry.id) return false;
+      if (typeof entry.date !== 'string') return false;
+      if (typeof entry.timestamp !== 'number' || !isFinite(entry.timestamp)) return false;
+      if (typeof entry.distance !== 'number' || !isFinite(entry.distance) || entry.distance <= 0) return false;
+      if (typeof entry.fuel !== 'number' || !isFinite(entry.fuel) || entry.fuel <= 0) return false;
+      if (!(typeof entry.notes === 'string' || entry.notes == null)) return false;
+      return true;
+    }
+
+    function toNumberOrNull(value) {
+      if (typeof value === 'number') return isFinite(value) ? value : null;
+      if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value.replace(',', '.'));
+        return isFinite(parsed) ? parsed : null;
+      }
+      return null;
+    }
+
+    // Coerce shapes we can safely repair before validation (numeric strings, non-string notes).
+    function normalizeEntry(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+      const distance = toNumberOrNull(raw.distance);
+      const fuel = toNumberOrNull(raw.fuel);
+      const timestamp = toNumberOrNull(raw.timestamp);
+      const positive = (v) => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
+      const notes = raw.notes == null ? '' : String(raw.notes).slice(0, 500);
+      const entry = {
+        id: typeof raw.id === 'string' && raw.id ? raw.id : null,
+        date: typeof raw.date === 'string' ? raw.date : (timestamp != null ? todayISO(new Date(timestamp)) : null),
+        timestamp,
+        distance,
+        fuel,
+        notes,
+        fuelType: typeof raw.fuelType === 'string' && raw.fuelType ? raw.fuelType : null,
+        fuelCost: positive(toNumberOrNull(raw.fuelCost)),
+        pricePerLiter: positive(toNumberOrNull(raw.pricePerLiter)),
+        odometer: positive(toNumberOrNull(raw.odometer)),
+        isPartialFill: raw.isPartialFill === true,
+      };
+      return validateEntry(entry) ? entry : null;
+    }
+
+    function normalizeSettings(raw) {
+      const s = raw && typeof raw === 'object' ? raw : {};
+      const prices = { ...DEFAULT_FUEL_PRICES };
+      if (s.fuelPrices && typeof s.fuelPrices === 'object') {
+        Object.keys(prices).forEach((key) => {
+          const value = toNumberOrNull(s.fuelPrices[key]);
+          if (value != null && value > 0) prices[key] = Math.round(value);
+        });
+      }
+      return {
+        darkMode: ['auto', 'dark', 'light'].includes(s.darkMode) ? s.darkMode : 'auto',
+        language: 'id',
+        entryMode: s.entryMode === 'odometer' ? 'odometer' : 'trip',
+        fuelPrices: prices,
+        lastFuelType: FUEL_TYPES.includes(s.lastFuelType) ? s.lastFuelType : null,
+        persistRequested: s.persistRequested === true,
+        lastBackupAt: toNumberOrNull(s.lastBackupAt),
+        backupNudgeDismissedAt: toNumberOrNull(s.backupNudgeDismissedAt),
+        onboarded: s.onboarded === true,
+        seenIntro: s.seenIntro === true,
+        sampleDataLoaded: s.sampleDataLoaded === true,
+        chartSeries: s.chartSeries === 'cost' ? 'cost' : 'ratio',
+        iosInstallHintShown: s.iosInstallHintShown === true,
+      };
     }
 
     function normalizeData(raw) {
-      if (!raw || typeof raw !== 'object') return freshData();
-      const entries = Array.isArray(raw.entries) ? raw.entries.filter(validateEntry) : [];
-      const normalizedEntries = entries.map((e) => ({
-        ...e,
-        ratio: computeRatio(e.distance, e.fuel),
-      }));
-      const settings = raw.settings && typeof raw.settings === 'object'
-        ? { darkMode: raw.settings.darkMode || 'auto', language: 'id' }
-        : { ...defaultData.settings };
-      return { entries: normalizedEntries, settings };
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return freshData();
+      const entries = [];
+      const quarantine = Array.isArray(raw.quarantine) ? raw.quarantine.slice(0, 200) : [];
+      const seen = new Set();
+      if (Array.isArray(raw.entries)) {
+        raw.entries.forEach((candidate) => {
+          const entry = normalizeEntry(candidate);
+          if (!entry) {
+            quarantine.push(candidate);
+            return;
+          }
+          if (seen.has(entry.id)) {
+            // Never drop data silently — a duplicate id is recoverable from quarantine.
+            quarantine.push(candidate);
+            return;
+          }
+          seen.add(entry.id);
+          entries.push(entry);
+        });
+      }
+      entries.sort((a, b) => -byTimeAsc(a, b));
+      return {
+        schemaVersion: SCHEMA_VERSION,
+        entries,
+        settings: normalizeSettings(raw.settings),
+        quarantine,
+      };
+    }
+
+    // Runs the migration ladder then normalizes. Used for both load and import.
+    function hydrate(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return freshData();
+      let working = raw;
+      let version = Math.floor(toNumberOrNull(raw.schemaVersion) || 1);
+      if (version < 1) version = 1;
+      while (version < SCHEMA_VERSION && MIGRATIONS[version]) {
+        working = MIGRATIONS[version](working);
+        version += 1;
+      }
+      return normalizeData(working);
     }
 
     function loadData() {
       state.storageSupported = supportsLocalStorage();
       if (!state.storageSupported) {
-        showBanner('LocalStorage tidak tersedia. Data tidak akan tersimpan.');
         state.data = freshData();
+        notify('Penyimpanan browser tidak tersedia. Data tidak akan tersimpan.', 'danger', { persistent: true });
         return;
       }
 
-      const raw = localStorage.getItem('fuelTrackerData');
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
         state.data = freshData();
         saveData();
         return;
       }
       const parsed = safeParse(raw);
-      state.data = normalizeData(parsed);
       if (!parsed) {
-        showBanner('Data tersimpan rusak. Data direset.');
+        state.data = freshData();
+        notify('Data tersimpan rusak dan tidak bisa dibaca. Mulai dari kosong.', 'danger');
         saveData();
+        return;
       }
+      state.data = hydrate(parsed);
+      saveData();
     }
 
+    function isQuotaError(error) {
+      if (!error) return false;
+      return error.name === 'QuotaExceededError'
+        || error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+        || error.code === 22
+        || error.code === 1014;
+    }
+
+    // Transactional: on failure the previous snapshot is restored to disk AND to memory,
+    // so what is on screen always equals what is on disk.
     function saveData() {
-      if (!state.storageSupported) return;
+      if (!state.storageSupported) return true;
+      let payload;
       try {
-        localStorage.setItem('fuelTrackerData', JSON.stringify(state.data));
+        payload = JSON.stringify(state.data);
       } catch (error) {
-        showBanner('Gagal menyimpan. Pastikan penyimpanan masih tersedia.');
         console.error(error);
+        notify('Data tidak bisa diserialisasi. Perubahan terakhir dibatalkan.', 'danger');
+        return false;
       }
+
+      const snapshot = localStorage.getItem(STORAGE_KEY);
+      try {
+        localStorage.setItem(STORAGE_KEY, payload);
+      } catch (error) {
+        console.error(error);
+        try {
+          if (snapshot === null) localStorage.removeItem(STORAGE_KEY);
+          else localStorage.setItem(STORAGE_KEY, snapshot);
+        } catch (_) { /* nothing else we can do */ }
+        state.data = snapshot === null ? freshData() : hydrate(safeParse(snapshot));
+        renderAll();
+        if (isQuotaError(error)) {
+          notify('Penyimpanan penuh. Perubahan dibatalkan — ekspor data dulu untuk mengamankannya.', 'danger', {
+            actionLabel: 'Backup sekarang',
+            action: () => exportJson(),
+          });
+        } else {
+          notify('Gagal menyimpan. Perubahan terakhir dibatalkan.', 'danger');
+        }
+        return false;
+      }
+
+      requestPersistence();
+      return true;
     }
 
-    function id() {
-      return `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    function requestPersistence() {
+      if (!state.data || state.data.settings.persistRequested) return;
+      if (!navigator.storage || !navigator.storage.persist) return;
+      state.data.settings.persistRequested = true; // flag-gated: ask the browser only once
+      navigator.storage.persist().catch(() => {});
     }
+
+    /* ============================== CALC ============================== */
 
     function computeRatio(distance, fuel) {
       if (!fuel) return null;
@@ -732,207 +2177,1884 @@
       return ratio;
     }
 
-    function formatNumber(value, opts = {}) {
-      const nf = new Intl.NumberFormat('id-ID', opts);
-      return nf.format(value);
+    // Partial fills carry distance/liters/cost forward; the ratio lands on the next full tank.
+    function deriveEntries(entries) {
+      const asc = entries.slice().sort(byTimeAsc);
+      const map = new Map();
+      let bucketDistance = 0;
+      let bucketFuel = 0;
+      let bucketCost = 0;
+      let bucketCostKnown = true;
+      let bucketCount = 0;
+
+      asc.forEach((entry) => {
+        bucketDistance += entry.distance;
+        bucketFuel += entry.fuel;
+        bucketCount += 1;
+        if (typeof entry.fuelCost === 'number' && entry.fuelCost > 0) bucketCost += entry.fuelCost;
+        else bucketCostKnown = false;
+
+        if (entry.isPartialFill) {
+          map.set(entry.id, { ratio: null, costPerKm: null, carried: true, spanEntries: bucketCount });
+          return;
+        }
+
+        const ratio = computeRatio(bucketDistance, bucketFuel);
+        const costPerKm = bucketCostKnown && bucketCost > 0 && bucketDistance > 0
+          ? bucketCost / bucketDistance
+          : null;
+        map.set(entry.id, { ratio, costPerKm, carried: false, spanEntries: bucketCount });
+        bucketDistance = 0;
+        bucketFuel = 0;
+        bucketCost = 0;
+        bucketCostKnown = true;
+        bucketCount = 0;
+      });
+
+      return map;
     }
 
-    function formatFuel(fuel) {
-      if (fuel < 1) return formatNumber(fuel, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-      return formatNumber(fuel, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function monthKeyOf(ts) {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
 
-    function ratioLabel(value) {
-      if (value === null) return 'Invalid';
-      return `1:${value.toFixed(2)}`;
+    function computeStats(entries, derived) {
+      const totalDistance = entries.reduce((sum, e) => sum + e.distance, 0);
+      const totalFuel = entries.reduce((sum, e) => sum + e.fuel, 0);
+      const avg = totalFuel ? totalDistance / totalFuel : null;
+
+      const ratios = [];
+      entries.forEach((e) => {
+        const d = derived.get(e.id);
+        if (d && d.ratio !== null && !e.isPartialFill) ratios.push(d.ratio);
+      });
+
+      const costed = entries.filter((e) => typeof e.fuelCost === 'number' && e.fuelCost > 0);
+      const totalCost = costed.reduce((sum, e) => sum + e.fuelCost, 0);
+      const costedDistance = costed.reduce((sum, e) => sum + e.distance, 0);
+      const costPerKm = costedDistance > 0 && totalCost > 0 ? totalCost / costedDistance : null;
+
+      const thisMonth = monthKeyOf(Date.now());
+      const monthSpend = costed
+        .filter((e) => monthKeyOf(e.timestamp) === thisMonth)
+        .reduce((sum, e) => sum + e.fuelCost, 0);
+
+      return {
+        totalDistance,
+        totalFuel,
+        totalCost,
+        avg,
+        best: ratios.length ? Math.max(...ratios) : null,
+        worst: ratios.length ? Math.min(...ratios) : null,
+        costPerKm,
+        monthSpend,
+        hasCostData: costed.length > 0,
+        ratioCount: ratios.length,
+      };
+    }
+
+    // Aggregate the hero metric over [fromTs, toTs) so the two windows are comparable.
+    function windowMetric(entries, series, fromTs, toTs) {
+      let distance = 0;
+      let fuel = 0;
+      let cost = 0;
+      let costDistance = 0;
+      entries.forEach((e) => {
+        if (e.timestamp < fromTs || e.timestamp >= toTs) return;
+        distance += e.distance;
+        fuel += e.fuel;
+        if (typeof e.fuelCost === 'number' && e.fuelCost > 0) {
+          cost += e.fuelCost;
+          costDistance += e.distance;
+        }
+      });
+      if (series === 'cost') return costDistance > 0 && cost > 0 ? cost / costDistance : null;
+      return fuel > 0 ? distance / fuel : null;
+    }
+
+    // Percent change of the hero metric across the last 30 days vs the 30 before it.
+    function heroDelta(entries, series, now = Date.now()) {
+      const day = 86400000;
+      const recent = windowMetric(entries, series, now - 30 * day, now + day);
+      const prior = windowMetric(entries, series, now - 60 * day, now - 30 * day);
+      if (recent == null || prior == null || prior === 0) return null;
+      return ((recent - prior) / prior) * 100;
+    }
+
+    function monthlySummary(entries, limit = 3) {
+      const buckets = new Map();
+      entries.forEach((entry) => {
+        const key = monthKeyOf(entry.timestamp);
+        let bucket = buckets.get(key);
+        if (!bucket) {
+          bucket = { key, ts: entry.timestamp, spend: 0, distance: 0, fuel: 0, hasCost: false };
+          buckets.set(key, bucket);
+        }
+        if (entry.timestamp < bucket.ts) bucket.ts = entry.timestamp;
+        bucket.distance += entry.distance;
+        bucket.fuel += entry.fuel;
+        if (typeof entry.fuelCost === 'number' && entry.fuelCost > 0) {
+          bucket.spend += entry.fuelCost;
+          bucket.hasCost = true;
+        }
+      });
+
+      const ordered = Array.from(buckets.values()).sort((a, b) => (a.key < b.key ? 1 : a.key > b.key ? -1 : 0));
+      ordered.forEach((bucket, index) => {
+        const prev = ordered[index + 1];
+        bucket.costPerKm = bucket.hasCost && bucket.distance > 0 ? bucket.spend / bucket.distance : null;
+        bucket.delta = prev && prev.spend > 0 && bucket.hasCost && prev.hasCost
+          ? ((bucket.spend - prev.spend) / prev.spend) * 100
+          : null;
+      });
+      return ordered.slice(0, limit);
+    }
+
+    function refillNudge(entries) {
+      if (entries.length < 3) return null;
+      const asc = entries.slice().sort(byTimeAsc);
+      const gaps = [];
+      for (let i = 1; i < asc.length; i += 1) {
+        const gap = (asc[i].timestamp - asc[i - 1].timestamp) / 86400000;
+        if (gap >= 0.5) gaps.push(gap);
+      }
+      if (gaps.length < 2) return null;
+      const typical = median(gaps);
+      if (!typical) return null;
+      const last = asc[asc.length - 1];
+      const days = daysBetween(new Date(todayISO() + 'T00:00:00').getTime(), last.timestamp);
+      if (days <= typical) return null;
+      return { days, typical: Math.max(1, Math.round(typical)) };
+    }
+
+    function previousOdometer(beforeTs, excludeId) {
+      let best = null;
+      state.data.entries.forEach((entry) => {
+        if (entry.id === excludeId) return;
+        if (typeof entry.odometer !== 'number' || entry.odometer <= 0) return;
+        if (entry.timestamp > beforeTs) return;
+        if (!best || byTimeAsc(best, entry) < 0) best = entry;
+      });
+      return best ? best.odometer : null;
+    }
+
+    // Entries whose stored distance no longer matches the odometer chain —
+    // editing an older odometer doesn't cascade, so downstream rows go stale.
+    function staleOdometerEntries() {
+      const asc = state.data.entries.slice().sort(byTimeAsc);
+      const stale = [];
+      let prevOdo = null;
+      asc.forEach((entry) => {
+        if (typeof entry.odometer !== 'number' || entry.odometer <= 0) return;
+        if (prevOdo != null) {
+          const expected = entry.odometer - prevOdo;
+          if (expected > 0 && Math.abs(expected - entry.distance) > 0.5) {
+            stale.push({ id: entry.id, distance: Math.round(expected * 10) / 10 });
+          }
+        }
+        prevOdo = entry.odometer;
+      });
+      return stale;
+    }
+
+    /* ============================== VIEW ============================== */
+
+    function prefersReducedMotion() {
+      return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    /* ---------- Toasts ---------- */
+
+    const TOAST_MS = { info: 4000, warning: 7000, danger: 9000 };
+
+    // Transient feedback goes to a toast; anything persistent stays as an inline nudge
+    // so a permanent warning never parks itself over the thumb zone.
+    function notify(message, tone = 'info', opts = {}) {
+      if (opts.persistent === true) {
+        const key = id();
+        state.messages.push({
+          key,
+          message,
+          tone,
+          actionLabel: opts.actionLabel || null,
+          action: opts.action || null,
+          persistent: true,
+        });
+        renderNudges();
+        return key;
+      }
+      return toast(message, tone, opts);
+    }
+
+    // A modal <dialog> lives in the top layer, so toasts must move inside the
+    // frontmost open dialog or they are painted underneath it.
+    function placeToasts() {
+      const open = Array.from(document.querySelectorAll('dialog[open]')).pop();
+      const host = open || document.body;
+      if (elements.toasts.parentElement !== host) host.appendChild(elements.toasts);
+    }
+
+    function toast(message, tone = 'info', opts = {}) {
+      placeToasts();
+      const key = id();
+      const region = tone === 'danger' ? elements.toastAlert : elements.toastPolite;
+      const node = document.createElement('div');
+      node.className = `toast tone-${tone}`;
+      node.dataset.key = key;
+      const action = opts.actionLabel
+        ? `<button type="button" class="toast-action" data-toast-action>${escapeHtml(opts.actionLabel)}</button>`
+        : '';
+      node.innerHTML = `<span class="toast-msg">${escapeHtml(message)}</span>${action}`
+        + `<button type="button" class="toast-close" data-toast-close aria-label="Tutup">✕</button>`;
+      region.appendChild(node);
+
+      const duration = opts.duration || TOAST_MS[tone] || TOAST_MS.info;
+      const entry = { node, action: opts.action || null, onExpire: opts.onExpire || null, timer: null };
+      entry.timer = setTimeout(() => dismissToast(key, 'expire'), duration);
+      state.toasts.set(key, entry);
+
+      // Only a handful of toasts should ever coexist; drop the oldest beyond three.
+      if (state.toasts.size > 3) dismissToast(state.toasts.keys().next().value, 'expire');
+      return key;
+    }
+
+    function dismissToast(key, reason) {
+      const entry = state.toasts.get(key);
+      if (!entry) return;
+      state.toasts.delete(key);
+      if (entry.timer) clearTimeout(entry.timer);
+      if (reason === 'expire' && entry.onExpire) entry.onExpire();
+      const node = entry.node;
+      node.classList.add('is-leaving');
+      const remove = () => node.remove();
+      if (prefersReducedMotion()) remove();
+      else setTimeout(remove, 220);
+    }
+
+    function dismissMessage(key) {
+      state.messages = state.messages.filter((m) => m.key !== key);
+      renderNudges();
+    }
+
+    function wireToasts() {
+      [elements.toastPolite, elements.toastAlert].forEach((region) => {
+        region.addEventListener('click', (event) => {
+          const node = event.target.closest('.toast');
+          if (!node) return;
+          const key = node.dataset.key;
+          const entry = state.toasts.get(key);
+          if (event.target.closest('[data-toast-action]')) {
+            if (entry && entry.action) {
+              const run = entry.action;
+              entry.onExpire = null;
+              dismissToast(key, 'action');
+              run();
+            }
+            return;
+          }
+          if (event.target.closest('[data-toast-close]')) dismissToast(key, 'expire');
+        });
+      });
+    }
+
+    function nudgeMarkup(item) {
+      const action = item.actionLabel
+        ? `<button type="button" class="nudge-action" data-nudge-action="${escapeHtml(item.key)}">${escapeHtml(item.actionLabel)}</button>`
+        : '';
+      const close = item.persistent
+        ? ''
+        : `<button type="button" class="nudge-close" data-nudge-dismiss="${escapeHtml(item.key)}" aria-label="Tutup pesan">✕</button>`;
+      return `<div class="nudge ${escapeHtml(item.tone)}"><div class="nudge-text">${escapeHtml(item.message)}</div>${action}${close}</div>`;
+    }
+
+    function renderNudges() {
+      if (!state.data) return;
+      const items = [];
+
+      if (state.data.quarantine.length) {
+        items.push({
+          key: 'quarantine',
+          tone: 'warning',
+          message: `${state.data.quarantine.length} catatan tidak bisa dibaca dan disisihkan dari statistik.`,
+          actionLabel: 'Lihat',
+          action: () => openSettings(),
+          persistent: true,
+        });
+      }
+
+      if (state.data.settings.sampleDataLoaded) {
+        items.push({
+          key: 'sample',
+          tone: 'info',
+          message: 'Kamu sedang melihat 5 catatan contoh, bukan data asli.',
+          actionLabel: 'Hapus contoh',
+          action: () => clearSampleData(),
+          persistent: true,
+        });
+      }
+
+      if (!state.dismissed.refill) {
+        const nudge = refillNudge(state.data.entries);
+        if (nudge) {
+          items.push({
+            key: 'refill',
+            tone: 'info',
+            message: `Terakhir isi ${nudge.days} hari lalu, biasanya kamu isi tiap ${nudge.typical} hari.`,
+            actionLabel: 'Catat sekarang',
+            action: () => openDialog(),
+            persistent: false,
+          });
+        }
+      }
+
+      const staleOdo = staleOdometerEntries();
+      if (staleOdo.length) {
+        items.push({
+          key: 'odochain',
+          tone: 'warning',
+          message: `${staleOdo.length} catatan tidak lagi cocok dengan rantai odometer setelah perubahan terakhir.`,
+          actionLabel: 'Perbarui otomatis',
+          action: () => reconcileOdometerChain(),
+          persistent: true,
+        });
+      }
+
+      const settings = state.data.settings;
+
+      if (!isStandaloneDisplay() && state.data.entries.length >= 2) {
+        if (deferredInstallPrompt) {
+          items.push({
+            key: 'install',
+            tone: 'info',
+            message: 'Pasang Fuel Tracker sebagai aplikasi supaya lebih cepat dibuka.',
+            actionLabel: 'Pasang',
+            action: () => {
+              const evt = deferredInstallPrompt;
+              deferredInstallPrompt = null;
+              if (evt) evt.prompt();
+            },
+            persistent: false,
+          });
+        } else if (isIosDevice() && !settings.iosInstallHintShown) {
+          items.push({
+            key: 'install-ios',
+            tone: 'info',
+            message: 'Pasang: tap tombol Bagikan lalu "Tambah ke Layar Utama".',
+            persistent: false,
+          });
+        }
+      }
+
+      const backupOverdue = state.data.entries.length >= BACKUP_NUDGE_MIN_ENTRIES
+        && (settings.lastBackupAt == null || daysBetween(Date.now(), settings.lastBackupAt) >= BACKUP_NUDGE_DAYS);
+      const nudgeSnoozed = settings.backupNudgeDismissedAt != null
+        && daysBetween(Date.now(), settings.backupNudgeDismissedAt) < BACKUP_NUDGE_DAYS;
+      if (backupOverdue && !nudgeSnoozed) {
+        items.push({
+          key: 'backup',
+          tone: 'warning',
+          message: 'Data hanya tersimpan di HP ini. Bikin backup supaya aman kalau browser dibersihkan.',
+          actionLabel: 'Backup JSON',
+          action: () => exportJson(),
+          persistent: false,
+        });
+      }
+
+      const all = items.concat(state.messages);
+      elements.nudges.innerHTML = all.map(nudgeMarkup).join('');
+      elements.nudges.dataset.count = String(all.length);
+      state.nudgeIndex = new Map(all.map((item) => [item.key, item]));
+    }
+
+    // delta > 0 means the metric rose; goodWhen says whether rising is a win.
+    function deltaChip(delta, goodWhen = 'down') {
+      if (delta === null || !isFinite(delta)) return '';
+      const rounded = Math.round(delta * 10) / 10;
+      const text = escapeHtml(formatNumber(Math.abs(rounded), { maximumFractionDigits: 1 }));
+      if (Math.abs(rounded) < 0.1) return `<span class="chip-delta">±0%</span>`;
+      const up = rounded > 0;
+      const good = up ? goodWhen === 'up' : goodWhen === 'down';
+      const arrow = up ? '▲' : '▼';
+      const label = `${up ? 'naik' : 'turun'} ${text} persen`;
+      return `<span class="chip-delta ${good ? 'good' : 'bad'}" aria-label="${label}">${arrow} ${text}%</span>`;
+    }
+
+    function tweenHero(node, from, to, format) {
+      if (state.heroRaf) cancelAnimationFrame(state.heroRaf);
+      if (from == null || to == null || from === to || prefersReducedMotion()) {
+        node.textContent = format(to);
+        return;
+      }
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / 500);
+        const eased = 1 - Math.pow(1 - t, 3);
+        node.textContent = format(from + (to - from) * eased);
+        if (t < 1) state.heroRaf = requestAnimationFrame(step);
+        else state.heroRaf = null;
+      };
+      state.heroRaf = requestAnimationFrame(step);
+    }
+
+    function renderStats() {
+      const entries = state.data.entries;
+      const stats = computeStats(entries, state.derived);
+      const costed = entries.filter((e) => typeof e.fuelCost === 'number' && e.fuelCost > 0).length;
+      const useCost = stats.hasCostData && stats.costPerKm !== null;
+
+      const hero = useCost
+        ? {
+          key: 'cost',
+          label: 'Biaya per km',
+          value: stats.costPerKm,
+          unit: '/km',
+          format: (v) => formatRpPerKm(v),
+          sub: `Rata-rata dari ${costed} pengisian berbiaya`,
+          goodWhen: 'down',
+        }
+        : {
+          key: 'ratio',
+          label: 'Rata-rata',
+          value: stats.avg,
+          unit: 'km/L',
+          format: (v) => formatNumber(v, { maximumFractionDigits: 2 }),
+          sub: `Rata-rata dari ${entries.length} pengisian`,
+          goodWhen: 'up',
+        };
+
+      const side = useCost
+        ? { label: 'Bulan ini', value: formatRupiah(stats.monthSpend) }
+        : { label: 'Total jarak', value: `${formatNumber(stats.totalDistance, { maximumFractionDigits: 0 })} km` };
+
+      const delta = entries.length ? heroDelta(entries, hero.key) : null;
+      const chip = deltaChip(delta, hero.goodWhen);
+      const subline = entries.length
+        ? `${escapeHtml(hero.sub)}${chip ? ` <span aria-hidden="true">·</span> ${chip} <span>vs 30 hari lalu</span>` : ''}`
+        : 'Belum ada pengisian';
+
+      elements.statsHero.innerHTML = `
+        <div class="hero hero-main">
+          <span class="label">${escapeHtml(hero.label)}</span>
+          <div class="value num"><span id="hero-num">-</span>${hero.value == null ? '' : `<span class="unit">${escapeHtml(hero.unit)}</span>`}</div>
+        </div>
+        <div class="hero hero-side">
+          <span class="label">${escapeHtml(side.label)}</span>
+          <div class="value num">${escapeHtml(entries.length ? side.value : '-')}</div>
+        </div>
+        <div class="hero-sub">${subline}</div>`;
+
+      const numNode = qs('#hero-num');
+      if (hero.value == null) {
+        numNode.textContent = '-';
+        state.heroKey = null;
+        state.heroValue = null;
+      } else {
+        const from = state.heroKey === hero.key ? state.heroValue : null;
+        tweenHero(numNode, from, hero.value, hero.format);
+        state.heroKey = hero.key;
+        state.heroValue = hero.value;
+      }
+
+      const km = (v) => (v === null ? '-' : `${escapeHtml(formatNumber(v, { maximumFractionDigits: 1 }))}<span class="unit">km/L</span>`);
+      elements.stats.innerHTML = `
+        <div class="stat">
+          <span class="label">Terbaik</span>
+          <div class="value num">${km(stats.best)}</div>
+        </div>
+        <div class="stat">
+          <span class="label">Terburuk</span>
+          <div class="value num">${km(stats.worst)}</div>
+        </div>
+        <div class="stat">
+          <span class="label">Total</span>
+          <div class="value num">${escapeHtml(formatNumber(stats.totalDistance, { maximumFractionDigits: 0 }))}<span class="unit">km</span></div>
+        </div>`;
+    }
+
+    function renderMonthly() {
+      const entries = state.data.entries;
+      if (!entries.length) {
+        elements.monthly.innerHTML = '';
+        return;
+      }
+      const months = monthlySummary(entries);
+      const rows = months.map((month) => {
+        const label = MONTH_FMT.format(new Date(month.ts));
+        const parts = [
+          `${escapeHtml(formatNumber(month.distance, { maximumFractionDigits: 0 }))} km`,
+          `${escapeHtml(formatFuel(month.fuel))} L`,
+        ];
+        if (month.costPerKm !== null) parts.push(`${escapeHtml(formatRpPerKm(month.costPerKm))}/km`);
+        return `
+          <div class="month-row">
+            <div class="month-head">
+              <span>${escapeHtml(label)}</span>
+              <span class="amount"><span class="num">${month.hasCost ? escapeHtml(formatRupiah(month.spend)) : '-'}</span>${deltaChip(month.delta, 'down')}</span>
+            </div>
+            <div class="month-grid">${parts.map((p) => `<span class="num">${p}</span>`).join('')}</div>
+          </div>`;
+      }).join('');
+      elements.monthly.innerHTML = `<h2 class="section-title">Per bulan</h2>${rows}`;
     }
 
     function ratioColor(value) {
-      if (value === null) return 'var(--danger)';
+      if (value === null) return 'var(--muted)';
       if (value >= 25) return 'var(--success)';
       if (value >= 15) return 'var(--warning)';
       return 'var(--danger)';
     }
 
-    function showBanner(message) {
-      elements.banner.textContent = message;
-      elements.banner.style.display = 'block';
+    const RTF = new Intl.RelativeTimeFormat('id', { numeric: 'auto' });
+
+    function startOfDay(ts) {
+      const d = new Date(ts);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
     }
 
-    function hideBanner() {
-      elements.banner.style.display = 'none';
-    }
-
-    function renderStats() {
-      const entries = state.data.entries;
-      if (!entries.length) {
-        elements.stats.innerHTML = `
-          <div class="stat">
-            <span class="label">Rata-rata</span>
-            <div class="value">-</div>
-          </div>
-          <div class="stat">
-            <span class="label">Terbaik</span>
-            <div class="value">-</div>
-          </div>
-          <div class="stat">
-            <span class="label">Terburuk</span>
-            <div class="value">-</div>
-          </div>
-          <div class="stat">
-            <span class="label">Total</span>
-            <div class="value">0 km / 0 L</div>
-          </div>
-        `;
-        return;
+    function relativeDate(ts) {
+      const diff = Math.round((startOfDay(ts) - startOfDay(Date.now())) / 86400000);
+      if (diff === 0 || diff === -1) {
+        const text = RTF.format(diff, 'day');
+        return text.charAt(0).toUpperCase() + text.slice(1);
       }
+      if (diff < 0 && diff > -7) return `${-diff} hari lalu`;
+      return formatDate(ts);
+    }
 
-      const totalDistance = entries.reduce((sum, e) => sum + e.distance, 0);
-      const totalFuel = entries.reduce((sum, e) => sum + e.fuel, 0);
-      const avg = totalFuel ? totalDistance / totalFuel : null;
-      const ratios = entries.map((e) => e.ratio).filter((r) => r !== null);
-      const best = ratios.length ? Math.max(...ratios) : null;
-      const worst = ratios.length ? Math.min(...ratios) : null;
+    const MARK_SVG = `<svg class="mark" viewBox="0 0 128 128" fill="none" aria-hidden="true">
+      <path d="${MARK_ARC}" stroke="currentColor" stroke-width="9" stroke-linecap="round" opacity=".35"/>
+      <path d="${MARK_DROP}" fill="currentColor"/>
+    </svg>`;
 
-      elements.stats.innerHTML = `
-        <div class="stat">
-          <span class="label">Rata-rata</span>
-          <div class="value">${avg === null ? 'Invalid' : `${avg.toFixed(2)} km/L`}</div>
-        </div>
-        <div class="stat">
-          <span class="label">Terbaik</span>
-          <div class="value">${best === null ? '-' : `${best.toFixed(2)} km/L`}</div>
-        </div>
-        <div class="stat">
-          <span class="label">Terburuk</span>
-          <div class="value">${worst === null ? '-' : `${worst.toFixed(2)} km/L`}</div>
-        </div>
-        <div class="stat">
-          <span class="label">Total</span>
-          <div class="value">${formatNumber(totalDistance, { maximumFractionDigits: 1 })} km / ${formatFuel(totalFuel)} L</div>
-        </div>
-      `;
+    function emptyStateMarkup() {
+      return `
+        <div class="empty-state">
+          ${MARK_SVG}
+          <h2>Mulai lacak konsumsi BBM</h2>
+          <p>Tahu persis berapa rupiah yang keluar tiap kilometer, bukan cuma perasaan boros.</p>
+          <ol class="steps">
+            <li>Isi tangki sampai penuh, catat angka KM atau reset trip meter.</li>
+            <li>Pakai motor seperti biasa sampai tangki mau habis.</li>
+            <li>Isi penuh lagi, lalu masukkan jarak dan liter yang masuk.</li>
+          </ol>
+          <div class="empty-actions">
+            <button type="button" class="primary block" data-act="add">Catat pengisian pertama</button>
+            <button type="button" class="secondary block" data-act="sample">Coba dengan data contoh</button>
+          </div>
+        </div>`;
+    }
+
+    // Delta of this fill's efficiency against the previous full tank.
+    function ratioDeltas(entries) {
+      const asc = entries.slice().sort(byTimeAsc);
+      const map = new Map();
+      let prev = null;
+      asc.forEach((entry) => {
+        const d = state.derived.get(entry.id);
+        if (!d || d.ratio === null || entry.isPartialFill) return;
+        if (prev !== null && prev > 0) map.set(entry.id, ((d.ratio - prev) / prev) * 100);
+        prev = d.ratio;
+      });
+      return map;
     }
 
     function renderHistory() {
       const entries = state.data.entries;
       if (!entries.length) {
-        elements.history.innerHTML = `<div class="empty">Belum ada data. Tap + untuk menambah.</div>`;
+        elements.history.innerHTML = emptyStateMarkup();
         return;
       }
 
-      elements.history.innerHTML = '';
-      entries.forEach((entry) => {
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.dataset.id = entry.id;
-        card.style.setProperty('--bar', ratioColor(entry.ratio));
-        card.innerHTML = `
-          <span class="delete-hint">Tahan untuk hapus</span>
-          <div class="meta">
-            <span>${formatDate(entry.timestamp)}</span>
-            <span>${ratioLabel(entry.ratio)}</span>
-          </div>
-          <div class="sub">
-            <span>${formatNumber(entry.distance, { maximumFractionDigits: 1 })} km</span>
-            <span>${formatFuel(entry.fuel)} L</span>
-          </div>
-          ${entry.notes ? `<div class="notes">${escapeHtml(entry.notes)}</div>` : ''}
-        `;
-        attachCardEvents(card, entry);
-        elements.history.appendChild(card);
+      const deltas = ratioDeltas(entries);
+      const stagger = state.animateList && !prefersReducedMotion();
+      const html = entries.map((entry, index) => {
+        const derived = state.derived.get(entry.id) || { ratio: null, costPerKm: null };
+        const ratio = entry.isPartialFill ? null : derived.ratio;
+        const badge = entry.isPartialFill
+          ? `<span class="badge-text">Sebagian</span>`
+          : (ratio === null
+            ? `<span class="badge-text">–</span>`
+            : `${escapeHtml(formatNumber(ratio, { maximumFractionDigits: 1 }))}<span class="unit">km/L</span>`);
+
+        const facts = [
+          `${escapeHtml(formatNumber(entry.distance, { maximumFractionDigits: 1 }))} km`,
+          `${escapeHtml(formatFuel(entry.fuel))} L`,
+        ];
+        if (entry.fuelCost) facts.push(escapeHtml(formatRupiah(entry.fuelCost)));
+
+        const meta = [];
+        if (ratio !== null) meta.push(`1:${escapeHtml(formatNumber(ratio, { maximumFractionDigits: 1 }))}`);
+        if (entry.fuelType) meta.push(escapeHtml(entry.fuelType));
+        if (derived.costPerKm !== null) meta.push(`${escapeHtml(formatRpPerKm(derived.costPerKm))}/km`);
+        if (entry.isPartialFill) meta.push(`<span class="tag">Isi sebagian</span>`);
+
+        const classes = ['card'];
+        if (stagger) classes.push('is-stagger');
+        if (state.flashId === entry.id) classes.push('is-new');
+        const label = relativeDate(entry.timestamp);
+
+        return `
+          <article class="${classes.join(' ')}" data-id="${escapeHtml(entry.id)}"
+            tabindex="0" role="button" aria-label="Edit catatan ${escapeHtml(label)}"
+            style="--tone:${ratioColor(ratio)};--i:${Math.min(index, 8)}">
+            <div class="badge num">${badge}</div>
+            <div class="card-main">
+              <div class="card-date">${escapeHtml(label)}</div>
+              <div class="card-facts num">${facts.map((f) => `<span>${f}</span>`).join('')}</div>
+              ${meta.length ? `<div class="card-facts card-meta num">${meta.map((f) => `<span>${f}</span>`).join('')}</div>` : ''}
+              ${entry.notes ? `<div class="notes">${escapeHtml(entry.notes)}</div>` : ''}
+            </div>
+            <div class="card-trail">
+              ${deltaChip(deltas.has(entry.id) ? deltas.get(entry.id) : null, 'up')}
+              <button type="button" class="card-menu" aria-label="Aksi untuk catatan ${escapeHtml(label)}">⋯</button>
+            </div>
+          </article>`;
+      }).join('');
+
+      elements.history.innerHTML = html;
+      state.animateList = false;
+      state.flashId = null;
+    }
+
+    function syncHeaderHeight() {
+      if (!elements.header) return;
+      const height = elements.header.offsetHeight;
+      if (height > 0) document.documentElement.style.setProperty('--header-h', `${height}px`);
+    }
+
+    function renderAll() {
+      state.derived = deriveEntries(state.data.entries);
+      renderStats();
+      renderChart();
+      renderMonthly();
+      renderHistory();
+      renderNudges();
+      renderSettings();
+      syncHeaderHeight();
+    }
+
+    /* ============================== TREND CHART ============================== */
+
+    const CHART_MAX_POINTS = 12;
+
+    function chartSeriesPoints(series) {
+      const asc = state.data.entries.slice().sort(byTimeAsc);
+      const points = [];
+      asc.forEach((entry) => {
+        const d = state.derived.get(entry.id);
+        if (!d || entry.isPartialFill) return;
+        const value = series === 'cost' ? d.costPerKm : d.ratio;
+        if (value === null || !isFinite(value)) return;
+        points.push({ ts: entry.timestamp, value });
+      });
+      return points.slice(-CHART_MAX_POINTS);
+    }
+
+    function costSeriesAvailable() {
+      return chartSeriesPoints('cost').length >= 3;
+    }
+
+    function chartValueText(value, series) {
+      return series === 'cost'
+        ? `${formatRpPerKm(value)}/km`
+        : `${formatNumber(value, { maximumFractionDigits: 1 })} km/L`;
+    }
+
+    function renderChart() {
+      const hasCost = costSeriesAvailable();
+      if (!hasCost && state.chartSeries === 'cost') state.chartSeries = 'ratio';
+      elements.seriesButtons.forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.series === state.chartSeries));
+        if (btn.dataset.series === 'cost') btn.disabled = !hasCost;
+      });
+
+      const points = chartSeriesPoints(state.chartSeries);
+      state.chartPoints = points;
+      state.scrubIndex = null;
+
+      const total = state.data.entries.length;
+      elements.chartCard.hidden = total === 0;
+      if (!total) return;
+
+      if (points.length < 3) {
+        elements.chartWrap.hidden = true;
+        elements.chartNote.hidden = true;
+        elements.chartPlaceholder.hidden = false;
+        const need = Math.max(1, 3 - points.length);
+        elements.chartPlaceholder.innerHTML = `
+          <svg class="spark" width="72" height="36" viewBox="0 0 72 36" fill="none" aria-hidden="true">
+            <path d="M2 30 L20 18 L38 24 L56 8 L70 14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>Butuh ${need} pengisian lagi untuk melihat tren.</div>`;
+        return;
+      }
+
+      elements.chartWrap.hidden = false;
+      elements.chartNote.hidden = false;
+      elements.chartPlaceholder.hidden = true;
+      const avg = points.reduce((s, p) => s + p.value, 0) / points.length;
+      elements.chartNote.textContent = `${points.length} pengisian terakhir · rata-rata ${chartValueText(avg, state.chartSeries)}`;
+      elements.chartCanvas.setAttribute(
+        'aria-label',
+        `Grafik ${state.chartSeries === 'cost' ? 'biaya per kilometer' : 'konsumsi km per liter'} dari ${points.length} pengisian terakhir. Rata-rata ${chartValueText(avg, state.chartSeries)}.`
+      );
+
+      if (prefersReducedMotion()) {
+        state.chartReveal = 1;
+        drawChart();
+      } else {
+        animateChartReveal();
+      }
+    }
+
+    let chartRevealRaf = null;
+    function animateChartReveal() {
+      if (chartRevealRaf) cancelAnimationFrame(chartRevealRaf);
+      const start = performance.now();
+      state.chartReveal = 0;
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / 500);
+        state.chartReveal = 1 - Math.pow(1 - t, 3);
+        drawChart();
+        if (t < 1) chartRevealRaf = requestAnimationFrame(step);
+        else chartRevealRaf = null;
+      };
+      chartRevealRaf = requestAnimationFrame(step);
+    }
+
+    function cssColor(name, fallback) {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return value || fallback;
+    }
+
+    function toRgba(ctx, color, alpha) {
+      const prev = ctx.fillStyle;
+      ctx.fillStyle = '#000000';
+      ctx.fillStyle = color;
+      const resolved = String(ctx.fillStyle);
+      ctx.fillStyle = prev;
+      if (/^#[0-9a-f]{6}$/i.test(resolved)) {
+        return `rgba(${parseInt(resolved.slice(1, 3), 16)},${parseInt(resolved.slice(3, 5), 16)},${parseInt(resolved.slice(5, 7), 16)},${alpha})`;
+      }
+      const match = resolved.match(/rgba?\(([^)]+)\)/);
+      if (match) {
+        const parts = match[1].split(/[\s,\/]+/).filter(Boolean);
+        return `rgba(${parts[0]},${parts[1]},${parts[2]},${alpha})`;
+      }
+      return `rgba(59,130,246,${alpha})`;
+    }
+
+    function roundRectPath(ctx, x, y, w, h, r) {
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        return;
+      }
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawChart() {
+      const canvas = elements.chartCanvas;
+      const points = state.chartPoints;
+      if (!canvas || elements.chartCard.hidden || elements.chartWrap.hidden || points.length < 3) return;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const colors = {
+        primary: cssColor('--primary', '#3b82f6'),
+        muted: cssColor('--muted', '#64748b'),
+        border: cssColor('--border', 'rgba(15,23,42,.1)'),
+        surface: cssColor('--surface', '#ffffff'),
+        text: cssColor('--text', '#0f172a'),
+        success: cssColor('--success', '#10b981'),
+        warning: cssColor('--warning', '#f59e0b'),
+        danger: cssColor('--danger', '#ef4444'),
+      };
+
+      const padL = 8;
+      const padR = 8;
+      const padT = 14;
+      const padB = 20;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      const values = points.map((p) => p.value);
+      let min = Math.min(...values);
+      let max = Math.max(...values);
+      const span = Math.max(max - min, Math.max(max * 0.08, 0.5));
+      const pad = span * 0.1;
+      min = min - pad;
+      max = min + span + pad * 2;
+
+      const xOf = (i) => padL + (plotW * i) / (points.length - 1);
+      const yOf = (v) => padT + plotH - ((v - min) / (max - min)) * plotH;
+      const avg = values.reduce((s, v) => s + v, 0) / values.length;
+
+      const dotColor = (v) => {
+        if (state.chartSeries === 'cost') {
+          if (v <= avg * 0.95) return colors.success;
+          if (v >= avg * 1.05) return colors.danger;
+          return colors.warning;
+        }
+        if (v >= 25) return colors.success;
+        if (v >= 15) return colors.warning;
+        return colors.danger;
+      };
+
+      // Catmull-Rom control points converted to cubic beziers.
+      const traceLine = () => {
+        ctx.beginPath();
+        ctx.moveTo(xOf(0), yOf(values[0]));
+        for (let i = 0; i < points.length - 1; i += 1) {
+          const p0 = i > 0 ? { x: xOf(i - 1), y: yOf(values[i - 1]) } : { x: xOf(i), y: yOf(values[i]) };
+          const p1 = { x: xOf(i), y: yOf(values[i]) };
+          const p2 = { x: xOf(i + 1), y: yOf(values[i + 1]) };
+          const p3 = i + 2 < points.length ? { x: xOf(i + 2), y: yOf(values[i + 2]) } : p2;
+          ctx.bezierCurveTo(
+            p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+            p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+            p2.x, p2.y
+          );
+        }
+      };
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w * state.chartReveal, h);
+      ctx.clip();
+
+      // Area fill
+      traceLine();
+      ctx.lineTo(xOf(points.length - 1), padT + plotH);
+      ctx.lineTo(xOf(0), padT + plotH);
+      ctx.closePath();
+      // Canvas gradients need concrete rgba, so resolve the token through fillStyle first.
+      const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+      grad.addColorStop(0, toRgba(ctx, colors.primary, 0.28));
+      grad.addColorStop(1, toRgba(ctx, colors.primary, 0));
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // All-time average
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = colors.muted;
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, yOf(avg));
+      ctx.lineTo(padL + plotW, yOf(avg));
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.setLineDash([]);
+
+      // Light moving average
+      if (points.length >= 5) {
+        ctx.beginPath();
+        for (let i = 0; i < values.length; i += 1) {
+          const a = values[Math.max(0, i - 1)];
+          const b = values[i];
+          const c = values[Math.min(values.length - 1, i + 1)];
+          const mean = (a + b + c) / 3;
+          if (i === 0) ctx.moveTo(xOf(i), yOf(mean));
+          else ctx.lineTo(xOf(i), yOf(mean));
+        }
+        ctx.strokeStyle = colors.muted;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Main line
+      traceLine();
+      ctx.strokeStyle = colors.primary;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Dots
+      points.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(xOf(i), yOf(p.value), 3, 0, Math.PI * 2);
+        ctx.fillStyle = dotColor(p.value);
+        ctx.fill();
+      });
+
+      // Newest point gets a ring
+      const lastIndex = points.length - 1;
+      ctx.beginPath();
+      ctx.arc(xOf(lastIndex), yOf(values[lastIndex]), 6, 0, Math.PI * 2);
+      ctx.strokeStyle = dotColor(values[lastIndex]);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(xOf(lastIndex), yOf(values[lastIndex]), 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = colors.surface;
+      ctx.fill();
+
+      ctx.restore();
+
+      if (state.scrubIndex !== null && points[state.scrubIndex]) {
+        const i = state.scrubIndex;
+        const x = xOf(i);
+        const y = yOf(values[i]);
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + plotH);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = dotColor(values[i]);
+        ctx.fill();
+
+        const label = `${formatDate(points[i].ts)} · ${chartValueText(values[i], state.chartSeries)}`;
+        ctx.font = '600 11px system-ui, sans-serif';
+        const tw = ctx.measureText(label).width;
+        const bw = tw + 16;
+        const bh = 22;
+        let bx = Math.min(Math.max(x - bw / 2, 2), w - bw - 2);
+        const by = 0;
+        roundRectPath(ctx, bx, by, bw, bh, 7);
+        ctx.fillStyle = colors.text;
+        ctx.fill();
+        ctx.fillStyle = colors.surface;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        ctx.fillText(label, bx + 8, by + bh / 2 + 0.5);
+      }
+    }
+
+    function scrubAt(clientX) {
+      const points = state.chartPoints;
+      if (points.length < 3) return;
+      const rect = elements.chartCanvas.getBoundingClientRect();
+      const padL = 8;
+      const plotW = rect.width - 16;
+      const rel = (clientX - rect.left - padL) / (plotW || 1);
+      const index = Math.round(rel * (points.length - 1));
+      const clamped = Math.min(points.length - 1, Math.max(0, index));
+      if (clamped === state.scrubIndex) return;
+      state.scrubIndex = clamped;
+      drawChart();
+    }
+
+    function endScrub() {
+      if (state.scrubIndex === null) return;
+      state.scrubIndex = null;
+      drawChart();
+    }
+
+    /* ============================== ENTRY FORM ============================== */
+
+    const TRIAD = ['cost', 'price', 'fuel'];
+
+    const FIELD_KEYS = {
+      distance: 'distance',
+      odometer: 'odometer',
+      cost: 'cost',
+      price: 'price',
+      fuel: 'fuel',
+      date: 'date',
+      notes: 'notes',
+    };
+
+    function fieldKey(target) {
+      if (!target || !target.id) return null;
+      return FIELD_KEYS[target.id] || null;
+    }
+
+    function fillFuelTypeOptions() {
+      elements.fuelType.innerHTML = ['<option value="">- pilih -</option>']
+        .concat(FUEL_TYPES.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`))
+        .join('');
+    }
+
+    function setRupiahField(input, value) {
+      input.value = value == null ? '' : formatNumber(Math.round(value), { maximumFractionDigits: 0 });
+    }
+
+    function liveFormatRupiah(input) {
+      const raw = input.value;
+      if (/[a-z]/i.test(raw)) return; // let "30rb" / "30k" stand until blur
+      const caret = input.selectionStart == null ? raw.length : input.selectionStart;
+      const digitsBefore = (raw.slice(0, caret).match(/\d/g) || []).length;
+      const digits = raw.replace(/\D/g, '').slice(0, 12);
+      if (!digits) {
+        if (raw !== '') input.value = '';
+        return;
+      }
+      const formatted = formatNumber(Number(digits), { maximumFractionDigits: 0 });
+      if (formatted === raw) return;
+      input.value = formatted;
+      let pos = 0;
+      let seen = 0;
+      while (pos < formatted.length && seen < digitsBefore) {
+        if (/\d/.test(formatted[pos])) seen += 1;
+        pos += 1;
+      }
+      try { input.setSelectionRange(pos, pos); } catch (_) { /* ignore */ }
+    }
+
+    function noteTriadEdit(key) {
+      if (!TRIAD.includes(key)) return;
+      const index = state.triadOrder.indexOf(key);
+      if (index !== -1) state.triadOrder.splice(index, 1);
+      state.triadOrder.unshift(key);
+      if (state.triadOrder.length > 3) state.triadOrder.length = 3;
+    }
+
+    // Last two edited of {cost, price/L, liters} win; the third is recomputed.
+    function recomputeTriad() {
+      if (state.triadOrder.length < 2) return;
+      const pair = state.triadOrder.slice(0, 2);
+      const target = TRIAD.find((key) => !pair.includes(key));
+      if (!target) return;
+      const cost = parseRupiah(elements.cost.value);
+      const price = parseRupiah(elements.price.value);
+      const liters = parseDecimal(elements.fuel.value);
+
+      if (target === 'cost') {
+        if (price > 0 && liters > 0) setRupiahField(elements.cost, price * liters);
+      } else if (target === 'price') {
+        if (cost > 0 && liters > 0) setRupiahField(elements.price, cost / liters);
+      } else if (cost > 0 && price > 0) {
+        elements.fuel.value = formatNumber(cost / price, { maximumFractionDigits: 2, useGrouping: false });
+      }
+    }
+
+    function needsManualDistance() {
+      return state.formMode !== 'odometer' || state.odoBaseline == null;
+    }
+
+    function applyFormMode() {
+      const odometerMode = state.formMode === 'odometer';
+      elements.odometerField.hidden = !odometerMode;
+      elements.distanceField.hidden = odometerMode && !needsManualDistance();
+      elements.mapHelper.hidden = elements.distanceField.hidden;
+      elements.modeButtons.forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.mode === state.formMode));
+      });
+      updateDerivedPreview();
+    }
+
+    function derivedDistance() {
+      if (state.formMode !== 'odometer' || state.odoBaseline == null) return null;
+      const odo = parseDecimal(elements.odometer.value);
+      if (odo == null) return null;
+      return odo - state.odoBaseline;
+    }
+
+    function updateDerivedPreview() {
+      if (state.formMode !== 'odometer') {
+        elements.odometerDerived.textContent = '';
+        return;
+      }
+      if (state.odoBaseline == null) {
+        elements.odometerDerived.textContent = 'Belum ada odometer sebelumnya. Isi jarak tempuh manual — odometer ini jadi patokan berikutnya.';
+        return;
+      }
+      const odo = parseDecimal(elements.odometer.value);
+      const base = formatNumber(state.odoBaseline, { maximumFractionDigits: 0 });
+      if (odo == null) {
+        elements.odometerDerived.textContent = `Odometer sebelumnya ${base} km.`;
+        return;
+      }
+      const distance = odo - state.odoBaseline;
+      elements.odometerDerived.textContent = distance > 0
+        ? `Jarak tempuh: ${formatNumber(distance, { maximumFractionDigits: 1 })} km (dari ${base} km).`
+        : `Odometer sebelumnya ${base} km.`;
+    }
+
+    function computeErrors() {
+      const errors = {};
+      const manual = needsManualDistance();
+
+      if (state.formMode === 'odometer') {
+        const odo = parseDecimal(elements.odometer.value);
+        if (odo == null) {
+          if (!manual) errors.odometer = 'Odometer wajib diisi';
+        } else if (odo <= 0) {
+          errors.odometer = 'Odometer harus lebih dari 0';
+        } else if (state.odoBaseline != null) {
+          const distance = odo - state.odoBaseline;
+          if (distance <= 0) {
+            errors.odometer = 'Lebih kecil dari odometer sebelumnya. Tripmeter di-reset? Pakai mode Jarak tempuh.';
+          } else if (distance > 2000) {
+            errors.odometer = 'Selisih odometer terlalu jauh. Periksa angkanya.';
+          }
+        }
+      }
+
+      if (manual) {
+        const distance = parseDecimal(elements.distance.value);
+        if (distance == null || distance <= 0) errors.distance = 'Jarak harus lebih dari 0';
+        else if (distance > 9999) errors.distance = 'Maksimal 9999 km';
+      }
+
+      const fuel = parseDecimal(elements.fuel.value);
+      if (fuel == null || fuel <= 0) errors.fuel = 'BBM harus lebih dari 0';
+      else if (fuel > 99) errors.fuel = 'Maksimal 99 L';
+
+      const costRaw = elements.cost.value.trim();
+      if (costRaw) {
+        const cost = parseRupiah(costRaw);
+        if (cost == null || cost <= 0) errors.cost = 'Nominal tidak terbaca';
+        else if (cost > 5000000) errors.cost = 'Nominal terlalu besar';
+      }
+
+      const priceRaw = elements.price.value.trim();
+      if (priceRaw) {
+        const price = parseRupiah(priceRaw);
+        if (price == null || price <= 0) errors.price = 'Harga tidak terbaca';
+        else if (price > 200000) errors.price = 'Harga terlalu besar';
+      }
+
+      if (!elements.date.value) errors.date = 'Tanggal wajib diisi';
+
+      return errors;
+    }
+
+    // Messages only appear for fields the user has touched (or after a submit attempt),
+    // so a blank form never opens covered in red.
+    function paintErrors() {
+      Object.keys(elements.errors).forEach((key) => {
+        const el = elements.errors[key];
+        if (!el) return;
+        const show = state.submitted || state.touched[key] === true;
+        const message = show ? (state.formErrors[key] || '') : '';
+        el.textContent = message;
+        const input = document.getElementById(key);
+        if (!input) return;
+        if (message) {
+          input.setAttribute('aria-invalid', 'true');
+          input.setAttribute('aria-describedby', `${key}-error`);
+        } else {
+          input.removeAttribute('aria-invalid');
+          input.removeAttribute('aria-describedby');
+        }
       });
     }
 
-    function formatDate(ts) {
-      return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(ts));
+    // Live "≈ 12,9 km/L · 1:12,9" under the litres field, tinted by the efficiency tone.
+    function updateEfficiencyPreview() {
+      const node = elements.preview;
+      if (!node) return;
+      if (elements.partial.checked) {
+        node.style.setProperty('--tone', 'var(--muted)');
+        node.textContent = 'Isi sebagian — rasio dihitung saat isi penuh.';
+        return;
+      }
+      const fuel = parseDecimal(elements.fuel.value);
+      const distance = needsManualDistance() ? parseDecimal(elements.distance.value) : derivedDistance();
+      if (!fuel || !distance || fuel <= 0 || distance <= 0) {
+        node.textContent = '';
+        node.style.setProperty('--tone', 'var(--muted)');
+        return;
+      }
+      const ratio = distance / fuel;
+      node.style.setProperty('--tone', ratioColor(ratio));
+      const shown = formatNumber(ratio, { maximumFractionDigits: 1 });
+      const parts = [`≈ ${shown} km/L`, `1:${shown}`];
+      const cost = parseRupiah(elements.cost.value);
+      if (cost && cost > 0) parts.push(`${formatRpPerKm(cost / distance)}/km`);
+      node.textContent = parts.join(' · ');
     }
 
-    function escapeHtml(text) {
-      return text.replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char] || char));
+    function updateFormState() {
+      state.formErrors = computeErrors();
+      paintErrors();
+      updateDerivedPreview();
+      updateEfficiencyPreview();
+    }
+
+    function serializeForm() {
+      return [
+        elements.distance.value,
+        elements.odometer.value,
+        elements.fuelType.value,
+        elements.cost.value,
+        elements.price.value,
+        elements.fuel.value,
+        elements.partial.checked ? '1' : '0',
+        elements.date.value,
+        elements.notes.value,
+      ].join('|');
     }
 
     function setFormDefaults(entry = null) {
-      const today = new Date();
-      const iso = today.toISOString().slice(0, 10);
       elements.form.reset();
-      elements.distance.value = entry ? entry.distance : '';
-      elements.fuel.value = entry ? entry.fuel : '';
-      elements.date.value = entry ? entry.date : iso;
-      elements.notes.value = entry ? entry.notes || '' : '';
-      clearErrors();
       state.editId = entry ? entry.id : null;
+      state.touched = {};
+      state.submitted = false;
+      state.triadOrder = [];
+      // Editing restores the mode the entry was captured in, not the global default.
+      state.formMode = entry
+        ? (entry.odometer != null ? 'odometer' : 'trip')
+        : (state.data.settings.entryMode === 'odometer' ? 'odometer' : 'trip');
+
+      const baseTs = entry ? entry.timestamp : Date.now();
+      state.odoBaseline = previousOdometer(baseTs, entry ? entry.id : null);
+
+      // useGrouping:false — these fields are re-parsed by parseDecimal, where a
+      // thousands dot would be read as a decimal point.
+      elements.distance.value = entry ? formatNumber(entry.distance, { maximumFractionDigits: 2, useGrouping: false }) : '';
+      elements.odometer.value = entry && entry.odometer ? formatNumber(entry.odometer, { maximumFractionDigits: 0, useGrouping: false }) : '';
+      elements.fuel.value = entry ? formatNumber(entry.fuel, { maximumFractionDigits: 3, useGrouping: false }) : '';
+      elements.fuelType.value = entry
+        ? (entry.fuelType && FUEL_TYPES.includes(entry.fuelType) ? entry.fuelType : '')
+        : (state.data.settings.lastFuelType || '');
+      setRupiahField(elements.cost, entry ? entry.fuelCost : null);
+      if (entry) {
+        setRupiahField(elements.price, entry.pricePerLiter);
+      } else {
+        const type = elements.fuelType.value;
+        setRupiahField(elements.price, type ? state.data.settings.fuelPrices[type] : null);
+      }
+      // A fully populated triad must stay consistent when a single field is
+      // corrected later: seed the pair so any lone edit recomputes its partner
+      // (liters/price edit -> cost; cost edit -> liters, price held fixed).
+      if (entry && entry.fuelCost && entry.pricePerLiter && entry.fuel > 0) {
+        state.triadOrder = ['price', 'fuel'];
+      }
+      elements.partial.checked = entry ? entry.isPartialFill === true : false;
+      elements.date.value = entry ? entry.date : todayISO();
+      elements.notes.value = entry ? entry.notes || '' : '';
+      elements.mapError.textContent = '';
+      elements.mapHelper.open = false;
+
       elements.formTitle.textContent = entry ? 'Edit Catatan' : 'Catat Pengisian';
       elements.submit.textContent = entry ? 'Perbarui' : 'Simpan';
-      updateSubmitState();
+
+      applyFormMode();
+      updateFormState();
+      state.formSnapshot = serializeForm();
     }
 
-    function clearErrors() {
-      Object.values(elements.errors).forEach((el) => (el.textContent = ''));
+    function isFormDirty() {
+      return serializeForm() !== state.formSnapshot;
     }
 
-    function validateForm() {
-      let valid = true;
-      const distanceRaw = elements.distance.value.trim();
-      const distanceParsed = parseDistanceText(distanceRaw);
-      const fuel = Number(elements.fuel.value);
-      const date = elements.date.value;
-      clearErrors();
+    async function requestCloseDialog() {
+      if (isFormDirty()) {
+        const discard = await confirmSheet({
+          title: 'Buang perubahan?',
+          text: 'Isian yang belum disimpan akan hilang.',
+          confirmLabel: 'Buang',
+          danger: true,
+        });
+        if (!discard) return false;
+      }
+      closeDialog();
+      return true;
+    }
 
-      if (!distanceParsed || distanceParsed <= 0) {
-        elements.errors.distance.textContent = 'Jarak harus lebih dari 0';
-        valid = false;
-      } else if (distanceParsed > 9999) {
-        elements.errors.distance.textContent = 'Maksimal 9999 km';
-        valid = false;
+    function openDialog(entry = null) {
+      dismissCoachMark();
+      setFormDefaults(entry);
+      openSheet(elements.dialog);
+      requestAnimationFrame(() => {
+        const target = (state.formMode === 'odometer' && !elements.odometerField.hidden)
+          ? elements.odometer
+          : elements.distance;
+        target?.focus({ preventScroll: true });
+      });
+    }
+
+    function closeDialog() {
+      closeSheet(elements.dialog);
+      state.editId = null;
+      state.mapIntent = false;
+    }
+
+    function buildEntryFromForm() {
+      const odometer = parseDecimal(elements.odometer.value);
+      const derived = derivedDistance();
+      const distance = needsManualDistance()
+        ? (parseDecimal(elements.distance.value) || 0)
+        : (derived || 0);
+      const fuel = parseDecimal(elements.fuel.value) || 0;
+      const dateStr = elements.date.value;
+      const timestamp = dateStr ? new Date(dateStr + 'T00:00:00').getTime() : Date.now();
+      const fuelType = elements.fuelType.value || null;
+      const fuelCost = parseRupiah(elements.cost.value);
+      let pricePerLiter = parseRupiah(elements.price.value);
+      if (!pricePerLiter && fuelCost && fuel > 0) pricePerLiter = Math.round(fuelCost / fuel);
+
+      return {
+        id: state.editId || id(),
+        date: dateStr,
+        distance,
+        fuel,
+        notes: elements.notes.value.trim(),
+        timestamp,
+        fuelType,
+        fuelCost: fuelCost && fuelCost > 0 ? fuelCost : null,
+        pricePerLiter: pricePerLiter && pricePerLiter > 0 ? pricePerLiter : null,
+        odometer: odometer && odometer > 0 ? odometer : null,
+        isPartialFill: elements.partial.checked,
+      };
+    }
+
+    function rememberFuelPrice(entry) {
+      if (!entry.fuelType || !entry.pricePerLiter) return;
+      if (!FUEL_TYPES.includes(entry.fuelType)) return;
+      state.data.settings.fuelPrices[entry.fuelType] = Math.round(entry.pricePerLiter);
+      state.data.settings.lastFuelType = entry.fuelType;
+    }
+
+    /* ============================== MUTATIONS ============================== */
+
+    function sortEntries() {
+      state.data.entries.sort((a, b) => -byTimeAsc(a, b));
+    }
+
+    function syncSampleFlag() {
+      if (!state.data.settings.sampleDataLoaded) return;
+      const hasSample = state.data.entries.some((e) => e.id.indexOf(SAMPLE_PREFIX) === 0);
+      if (!hasSample) state.data.settings.sampleDataLoaded = false;
+    }
+
+    function commit(mutate) {
+      mutate();
+      sortEntries();
+      syncSampleFlag();
+      // On failure saveData has already rolled memory back to disk and re-rendered.
+      if (!saveData()) return false;
+      renderAll();
+      return true;
+    }
+
+    function addEntry(entry) {
+      state.animateList = true;
+      state.flashId = entry.id;
+      return commit(() => {
+        state.data.entries.push(entry);
+        rememberFuelPrice(entry);
+      });
+    }
+
+    function updateEntry(updated) {
+      state.flashId = updated.id;
+      return commit(() => {
+        const index = state.data.entries.findIndex((e) => e.id === updated.id);
+        if (index !== -1) state.data.entries[index] = updated;
+        rememberFuelPrice(updated);
+      });
+    }
+
+    // Optimistic: the row leaves immediately and the toast holds the only copy for 5s.
+    function deleteEntry(entryId) {
+      const entry = state.data.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      const snapshot = { ...entry };
+      state.animateList = true;
+      if (!commit(() => {
+        state.data.entries = state.data.entries.filter((e) => e.id !== entryId);
+      })) return;
+
+      toast('Catatan dihapus.', 'info', {
+        actionLabel: 'Urungkan',
+        duration: 5000,
+        action: () => {
+          state.animateList = true;
+          state.flashId = snapshot.id;
+          if (commit(() => { state.data.entries.push(snapshot); })) {
+            toast('Catatan dikembalikan.', 'info', { duration: 2500 });
+          }
+        },
+      });
+    }
+
+    function openEntryById(entryId) {
+      const entry = state.data.entries.find((e) => e.id === entryId);
+      if (entry) openDialog(entry);
+    }
+
+    // One pass is complete: each distance derives only from its own odometer pair.
+    function reconcileOdometerChain() {
+      const stale = staleOdometerEntries();
+      if (!stale.length) return;
+      const byId = new Map(stale.map((s) => [s.id, s.distance]));
+      if (commit(() => {
+        state.data.entries.forEach((entry) => {
+          if (byId.has(entry.id)) entry.distance = byId.get(entry.id);
+        });
+      })) {
+        toast(`${stale.length} catatan diperbarui mengikuti rantai odometer.`, 'info');
+      }
+    }
+
+    /* ============================== SHEETS ============================== */
+
+    function openSheet(dlg) {
+      // Captured before showModal() steals focus, so 'close' can restore it to whatever invoked the sheet.
+      const active = document.activeElement;
+      dlg._invoker = active && active !== document.body ? active : null;
+      dlg.showModal();
+      requestAnimationFrame(() => dlg.classList.add('is-open'));
+    }
+
+    function closeSheet(dlg) {
+      dlg.classList.remove('is-open');
+      dlg.close();
+    }
+
+    function confirmSheet({ title, text = '', confirmLabel = 'Ya', danger = false }) {
+      return new Promise((resolve) => {
+        if (state.confirmResolve) {
+          const previous = state.confirmResolve;
+          state.confirmResolve = null;
+          previous(false);
+        }
+        elements.confirmTitle.textContent = title;
+        elements.confirmText.textContent = text;
+        elements.confirmOk.textContent = confirmLabel;
+        elements.confirmOk.className = danger ? 'danger' : 'primary';
+        state.confirmResolve = resolve;
+        openSheet(elements.confirmDialog);
+      });
+    }
+
+    function settleConfirm(value) {
+      const resolve = state.confirmResolve;
+      state.confirmResolve = null;
+      if (resolve) resolve(value);
+    }
+
+    function openActionSheet(entryId) {
+      const entry = state.data.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      state.actionId = entryId;
+      const derived = state.derived.get(entryId);
+      const bits = [
+        `${formatNumber(entry.distance, { maximumFractionDigits: 1 })} km`,
+        `${formatFuel(entry.fuel)} L`,
+      ];
+      if (derived && derived.ratio !== null && !entry.isPartialFill) {
+        bits.push(`${formatNumber(derived.ratio, { maximumFractionDigits: 1 })} km/L`);
+      }
+      elements.actionTitle.textContent = relativeDate(entry.timestamp);
+      elements.actionSub.textContent = bits.join(' · ');
+      openSheet(elements.actionSheet);
+    }
+
+    /* ============================== SAMPLE DATA ============================== */
+
+    function loadSampleData() {
+      const now = Date.now();
+      const samples = SAMPLE_ENTRIES.map((s, index) => {
+        const ts = startOfDay(now - s.days * 86400000);
+        return {
+          id: `${SAMPLE_PREFIX}${index}`,
+          date: todayISO(new Date(ts)),
+          distance: s.distance,
+          fuel: s.fuel,
+          notes: s.notes,
+          timestamp: ts,
+          fuelType: s.type,
+          fuelCost: Math.round(s.fuel * s.price),
+          pricePerLiter: s.price,
+          odometer: null,
+          isPartialFill: false,
+        };
+      });
+      state.animateList = true;
+      const ok = commit(() => {
+        const existing = new Set(state.data.entries.map((e) => e.id));
+        samples.forEach((entry) => { if (!existing.has(entry.id)) state.data.entries.push(entry); });
+        state.data.settings.sampleDataLoaded = true;
+      });
+      if (ok) toast('Data contoh dimuat. Hapus kapan saja lewat Pengaturan.', 'info');
+    }
+
+    function clearSampleData() {
+      state.animateList = true;
+      const ok = commit(() => {
+        state.data.entries = state.data.entries.filter((e) => e.id.indexOf(SAMPLE_PREFIX) !== 0);
+        state.data.settings.sampleDataLoaded = false;
+      });
+      if (ok) toast('Data contoh dihapus.', 'info');
+    }
+
+    /* ============================== ONBOARDING ============================== */
+
+    const FLOW_ICONS = [
+      { svg: `<path d="M12 3c0 0-5 6-5 9a5 5 0 0 0 10 0c0-3-5-9-5-9Z" fill="currentColor"/>`, text: 'Isi penuh' },
+      { svg: `<path d="M4 17a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M12 17 16 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, text: 'Catat KM' },
+      { svg: `<path d="M4 19 12 5l8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M12 9v3M12 15v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, text: 'Pakai motor' },
+      { svg: `<path d="M12 3c0 0-5 6-5 9a5 5 0 0 0 10 0c0-3-5-9-5-9Z" fill="currentColor" opacity=".45"/><path d="M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, text: 'Isi penuh lagi' },
+    ];
+
+    function flowMarkup() {
+      return `<div class="flow">${FLOW_ICONS.map((step) => `
+        <div class="flow-step">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${step.svg}</svg>
+          <span>${escapeHtml(step.text)}</span>
+        </div>`).join('')}</div>`;
+    }
+
+    function onboardSlide(step) {
+      if (step === 0) {
+        return `
+          <div class="onboard-slide">
+            ${MARK_SVG}
+            <h2 id="onboard-title">Tahu biaya per kilometer</h2>
+            <p>Bukan cuma "boros" atau "irit". Lihat berapa rupiah yang keluar tiap km dan apakah bulan ini lebih mahal dari bulan lalu.</p>
+          </div>`;
+      }
+      if (step === 1) {
+        return `
+          <div class="onboard-slide">
+            <h2 id="onboard-title">Metode isi penuh</h2>
+            <p>Empat langkah, sekali per pengisian. Hasilnya angka nyata, bukan tebakan spidometer.</p>
+            ${flowMarkup()}
+          </div>`;
+      }
+      const settings = state.data.settings;
+      return `
+        <div class="onboard-slide">
+          <h2 id="onboard-title">Atur sekali, lalu jalan</h2>
+          <p>Bisa diubah kapan saja lewat Pengaturan.</p>
+          <div class="seg" role="group" aria-label="Mode pengisian jarak">
+            <button type="button" class="seg-btn" data-onboard-mode="trip" aria-pressed="${settings.entryMode !== 'odometer'}">Jarak tempuh</button>
+            <button type="button" class="seg-btn" data-onboard-mode="odometer" aria-pressed="${settings.entryMode === 'odometer'}">Odometer</button>
+          </div>
+          <label for="onboard-fuel" style="width:100%;max-width:20rem">
+            BBM yang biasa dipakai
+            <select id="onboard-fuel">
+              <option value="">- pilih -</option>
+              ${FUEL_TYPES.map((type) => `<option value="${escapeHtml(type)}"${settings.lastFuelType === type ? ' selected' : ''}>${escapeHtml(type)}</option>`).join('')}
+            </select>
+          </label>
+        </div>`;
+    }
+
+    function renderOnboard() {
+      elements.onboardBody.innerHTML = onboardSlide(state.onboardStep);
+      elements.onboardDots.innerHTML = [0, 1, 2]
+        .map((i) => `<span class="${i === state.onboardStep ? 'on' : ''}"></span>`).join('');
+      elements.onboardNext.textContent = state.onboardStep === 2 ? 'Catat pengisian pertama' : 'Lanjut';
+      elements.onboardSkip.textContent = state.onboardStep === 0 ? 'Lewati' : 'Kembali';
+    }
+
+    function openOnboarding() {
+      state.onboardStep = 0;
+      renderOnboard();
+      openSheet(elements.onboardDialog);
+    }
+
+    function finishOnboarding(openForm) {
+      const select = qs('#onboard-fuel');
+      if (select && select.value && FUEL_TYPES.includes(select.value)) {
+        state.data.settings.lastFuelType = select.value;
+      }
+      state.data.settings.onboarded = true;
+      saveData();
+      renderSettings();
+      closeSheet(elements.onboardDialog);
+      if (openForm) setTimeout(() => openDialog(), prefersReducedMotion() ? 0 : 280);
+    }
+
+    let coachDismissed = false;
+    function showCoachMark() {
+      if (!state.data || state.data.settings.seenIntro || coachDismissed) return;
+      if (!state.data.entries.length) return;
+      if (document.getElementById('coach')) return;
+      const node = document.createElement('div');
+      node.id = 'coach';
+      node.className = 'coach';
+      node.innerHTML = '<div>Habis isi bensin? Tap + di sini. Cuma butuh 10 detik.</div><button type="button">Mengerti</button>';
+      document.body.appendChild(node);
+      state.coachTimer = setTimeout(dismissCoachMark, 9000);
+      node.querySelector('button').addEventListener('click', dismissCoachMark);
+    }
+
+    function dismissCoachMark() {
+      if (coachDismissed) return;
+      coachDismissed = true;
+      if (state.coachTimer) clearTimeout(state.coachTimer);
+      const node = document.getElementById('coach');
+      if (node) node.remove();
+      if (state.data && !state.data.settings.seenIntro) {
+        state.data.settings.seenIntro = true;
+        saveData();
+      }
+    }
+
+    /* ============================== EXPORT / IMPORT ============================== */
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function csvNumber(value, digits) {
+      if (typeof value !== 'number' || !isFinite(value)) return '';
+      return formatNumber(value, { maximumFractionDigits: digits, useGrouping: false });
+    }
+
+    function csvCell(value) {
+      let text = value == null ? '' : String(value);
+      // Formula injection guard for spreadsheet apps.
+      if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+      if (/[";\n\r]/.test(text)) text = `"${text.replace(/"/g, '""')}"`;
+      return text;
+    }
+
+    function exportCsv() {
+      const entries = state.data.entries;
+      if (!entries.length) {
+        notify('Belum ada catatan untuk diekspor.', 'warning');
+        return;
+      }
+      const header = ['date', 'odometer', 'distance', 'liters', 'fuelType', 'pricePerLiter', 'cost', 'km/L', 'Rp/km', 'notes'];
+      const rows = entries.slice().sort(byTimeAsc).map((entry) => {
+        const derived = state.derived.get(entry.id) || {};
+        return [
+          entry.date,
+          csvNumber(entry.odometer, 0),
+          csvNumber(entry.distance, 2),
+          csvNumber(entry.fuel, 3),
+          entry.fuelType || '',
+          csvNumber(entry.pricePerLiter, 0),
+          csvNumber(entry.fuelCost, 0),
+          csvNumber(derived.ratio == null ? null : derived.ratio, 2),
+          csvNumber(derived.costPerKm == null ? null : derived.costPerKm, 2),
+          entry.notes || '',
+        ].map(csvCell).join(';');
+      });
+      const csv = '﻿' + [header.join(';')].concat(rows).join('\r\n');
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `fuelio-${todayISO()}.csv`);
+      notify('CSV diekspor.', 'info');
+    }
+
+    function exportJson() {
+      const payload = {
+        schemaVersion: SCHEMA_VERSION,
+        exportedAt: new Date().toISOString(),
+        appVersion: APP_VERSION,
+        settings: state.data.settings,
+        entries: state.data.entries,
+      };
+      downloadBlob(
+        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        `fuelio-backup-${todayISO()}.json`
+      );
+      state.data.settings.lastBackupAt = Date.now();
+      state.data.settings.backupNudgeDismissedAt = null;
+      saveData();
+      state.messages = state.messages.filter((m) => m.key !== 'backup');
+      renderAll();
+      notify('Backup JSON tersimpan.', 'info');
+    }
+
+    function exportQuarantine() {
+      if (!state.data.quarantine.length) return;
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        appVersion: APP_VERSION,
+        quarantine: state.data.quarantine,
+      };
+      downloadBlob(
+        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        `fuelio-quarantine-${todayISO()}.json`
+      );
+    }
+
+    function clearImportPreview() {
+      state.pendingImport = null;
+      elements.importSummary.hidden = true;
+      elements.importSummary.innerHTML = '';
+    }
+
+    function showImportMessage(message, isError) {
+      elements.importSummary.hidden = false;
+      elements.importSummary.innerHTML = `<div class="${isError ? 'error' : 'hint'}">${escapeHtml(message)}</div>`;
+    }
+
+    function handleImportFile(file) {
+      clearImportPreview();
+      if (!file) return;
+      if (file.size > MAX_IMPORT_BYTES) {
+        showImportMessage('File terlalu besar (maksimal 5 MB).', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => showImportMessage('Gagal membaca file.', true);
+      reader.onload = () => {
+        const parsed = safeParse(String(reader.result || ''));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          showImportMessage('File bukan backup Fuel Tracker yang valid.', true);
+          return;
+        }
+        const hydrated = hydrate(parsed);
+        if (!hydrated.entries.length) {
+          showImportMessage('Tidak ada catatan valid di file ini.', true);
+          return;
+        }
+        const existing = new Set(state.data.entries.map((e) => e.id));
+        const added = hydrated.entries.filter((e) => !existing.has(e.id));
+        const skipped = hydrated.entries.length - added.length;
+        state.pendingImport = { hydrated, added };
+        elements.importSummary.hidden = false;
+        elements.importSummary.innerHTML = `
+          <div><strong>${hydrated.entries.length}</strong> catatan terbaca dari backup.</div>
+          <div>Gabungkan: ${added.length} catatan akan ditambah, ${skipped} dilewati (sudah ada).${hydrated.quarantine.length ? ` ${hydrated.quarantine.length} baris rusak diabaikan.` : ''}</div>
+          <div>Ganti semua: seluruh ${state.data.entries.length} catatan sekarang akan dihapus.</div>
+          <div class="settings-actions">
+            <button type="button" class="primary" id="import-merge">Gabungkan</button>
+            <button type="button" class="danger" id="import-replace">Ganti semua</button>
+            <button type="button" class="secondary" id="import-cancel">Batal</button>
+          </div>`;
+        qs('#import-merge').addEventListener('click', () => commitImport('merge'));
+        qs('#import-replace').addEventListener('click', () => commitImport('replace'));
+        qs('#import-cancel').addEventListener('click', clearImportPreview);
+      };
+      reader.readAsText(file);
+    }
+
+    async function commitImport(mode) {
+      const pending = state.pendingImport;
+      if (!pending) return;
+      if (mode === 'replace') {
+        const ok = await confirmSheet({
+          title: 'Ganti semua catatan?',
+          text: `${state.data.entries.length} catatan sekarang akan dihapus dan diganti isi backup.`,
+          confirmLabel: 'Ganti semua',
+          danger: true,
+        });
+        if (!ok) return;
+        if (!state.pendingImport) return;
       }
 
-      if (!fuel || fuel <= 0) {
-        elements.errors.fuel.textContent = 'BBM harus lebih dari 0';
-        valid = false;
-      } else if (fuel > 99) {
-        elements.errors.fuel.textContent = 'Maksimal 99 L';
-        valid = false;
-      }
+      state.animateList = true;
+      const ok = commit(() => {
+        if (mode === 'replace') {
+          state.data.entries = pending.hydrated.entries.slice();
+          state.data.settings = {
+            ...pending.hydrated.settings,
+            darkMode: state.data.settings.darkMode,
+            persistRequested: state.data.settings.persistRequested,
+          };
+        } else {
+          state.data.entries = state.data.entries.concat(pending.added);
+        }
+      });
 
-      if (!date) {
-        elements.errors.date.textContent = 'Tanggal wajib diisi';
-        valid = false;
+      clearImportPreview();
+      if (ok) {
+        notify(mode === 'replace'
+          ? `${pending.hydrated.entries.length} catatan dipulihkan.`
+          : `${pending.added.length} catatan ditambahkan.`, 'info');
+        setThemeAttributes();
       }
-
-      elements.submit.disabled = !valid;
-      return valid;
     }
 
-    function parseDistanceText(text) {
-      if (!text) return null;
-      const normalized = text.replace(',', '.');
-      const match = normalized.match(/(\d+(?:\.\d+)?)/);
-      if (!match) return null;
-      const value = parseFloat(match[1]);
-      if (!isFinite(value) || value <= 0) return null;
-      return value;
+    /* ============================== SETTINGS SHEET ============================== */
+
+    function renderSettings() {
+      if (!state.data) return;
+      const settings = state.data.settings;
+
+      document.querySelectorAll('input[name="entry-mode"]').forEach((input) => {
+        input.checked = input.value === settings.entryMode;
+      });
+
+      if (elements.priceSettings.childElementCount !== FUEL_TYPES.length) {
+        elements.priceSettings.innerHTML = FUEL_TYPES.map((type) => `
+          <div class="price-row">
+            <span>${escapeHtml(type)}</span>
+            <input type="text" inputmode="numeric" data-fuel-type="${escapeHtml(type)}" aria-label="Harga ${escapeHtml(type)}">
+          </div>`).join('');
+      }
+      elements.priceSettings.querySelectorAll('input[data-fuel-type]').forEach((input) => {
+        if (document.activeElement === input) return;
+        setRupiahField(input, settings.fuelPrices[input.dataset.fuelType]);
+      });
+
+      elements.backupInfo.textContent = settings.lastBackupAt
+        ? `Backup terakhir: ${formatDate(settings.lastBackupAt)}.`
+        : 'Belum pernah backup.';
+
+      elements.sampleGroup.hidden = !settings.sampleDataLoaded;
+
+      elements.quarantineGroup.hidden = state.data.quarantine.length === 0;
+      elements.quarantineInfo.textContent = `${state.data.quarantine.length} catatan tidak bisa dibaca dan tidak dihitung di statistik. Ekspor JSON mentahnya kalau mau diperbaiki manual.`;
+
+      if (elements.appVersionInfo) elements.appVersionInfo.textContent = `Fuel Tracker v${APP_VERSION}`;
     }
+
+    function openSettings() {
+      clearImportPreview();
+      renderSettings();
+      updateStorageInfo();
+      openSheet(elements.settingsDialog);
+    }
+
+    function updateStorageInfo() {
+      if (!navigator.storage || !navigator.storage.estimate) {
+        elements.storageInfo.textContent = '';
+        return;
+      }
+      navigator.storage.estimate().then((estimate) => {
+        const toMb = (bytes) => formatNumber((bytes || 0) / 1048576, { maximumFractionDigits: 1 });
+        elements.storageInfo.textContent = `Penyimpanan terpakai ${toMb(estimate.usage)} MB dari ${toMb(estimate.quota)} MB.`;
+      }).catch(() => {
+        elements.storageInfo.textContent = '';
+      });
+    }
+
+    /* ============================== MAP HELPER ============================== */
 
     function applyMapDistance() {
-      const parsed = parseDistanceText(elements.distance.value.trim());
-      if (parsed === null) {
+      const parsed = parseDecimal(elements.distance.value);
+      if (parsed === null || parsed <= 0) {
         elements.mapError.textContent = 'Tidak bisa baca jarak. Gunakan format "12,3 km".';
         return false;
       }
       elements.mapError.textContent = '';
-      elements.distance.value = parsed;
+      elements.distance.value = formatNumber(parsed, { maximumFractionDigits: 2, useGrouping: false });
       state.mapIntent = false;
-      updateSubmitState();
+      state.touched.distance = true;
+      updateFormState();
       return true;
     }
 
     let pasteCueTimeout = null;
     function startPasteCue() {
       if (pasteCueTimeout) clearTimeout(pasteCueTimeout);
-      elements.mapCta?.classList.add('cta-pulse');
+      elements.mapPaste?.classList.add('cta-pulse');
       pasteCueTimeout = setTimeout(() => {
-        elements.mapCta?.classList.remove('cta-pulse');
+        elements.mapPaste?.classList.remove('cta-pulse');
       }, 4200);
     }
 
@@ -944,130 +4066,114 @@
       try {
         const text = await navigator.clipboard.readText();
         elements.distance.value = text || '';
-        if (!applyMapDistance()) {
-          elements.distance.focus();
-        } else {
-          elements.distance.focus();
-        }
+        applyMapDistance();
+        elements.distance.focus();
       } catch (err) {
         elements.mapError.textContent = 'Gagal akses clipboard. Pastikan izin diberikan.';
         console.error(err);
       }
     }
 
-    function updateSubmitState() {
-      elements.submit.disabled = !validateForm();
-    }
+    /* ============================== EVENTS ============================== */
 
-    function openDialog(entry = null) {
-      setFormDefaults(entry);
-      elements.dialog.showModal();
-    }
-
-    function closeDialog() {
-      elements.dialog.close();
-      state.editId = null;
-      state.mapIntent = false;
-    }
-
-    function addEntry(entry) {
-      state.data.entries.push(entry);
-      sortEntries();
-      saveData();
-      renderAll();
-    }
-
-    function updateEntry(updated) {
-      const idx = state.data.entries.findIndex((e) => e.id === updated.id);
-      if (idx !== -1) {
-        state.data.entries[idx] = updated;
-        sortEntries();
-        saveData();
-        renderAll();
+    function handleFieldInput(target) {
+      const key = fieldKey(target);
+      if (!key) return;
+      state.touched[key] = true;
+      if (key === 'cost' || key === 'price') liveFormatRupiah(target);
+      if (TRIAD.includes(key)) {
+        noteTriadEdit(key);
+        recomputeTriad();
       }
-    }
-
-    function deleteEntry(entryId) {
-      state.data.entries = state.data.entries.filter((e) => e.id !== entryId);
-      saveData();
-      renderAll();
-    }
-
-    function sortEntries() {
-      state.data.entries.sort((a, b) => b.timestamp - a.timestamp);
-    }
-
-    function attachCardEvents(card, entry) {
-      let timer = null;
-      let longPressed = false;
-
-      const clear = () => {
-        if (timer) clearTimeout(timer);
-        timer = null;
-      };
-
-      card.addEventListener('pointerdown', () => {
-        longPressed = false;
-        timer = setTimeout(() => {
-          longPressed = true;
-          clear();
-          const sure = confirm('Hapus catatan ini?');
-          if (sure) deleteEntry(entry.id);
-        }, 650);
-      });
-
-      ['pointerup', 'pointerleave', 'pointercancel'].forEach((event) => {
-        card.addEventListener(event, clear);
-      });
-
-      card.addEventListener('click', () => {
-        if (longPressed) return;
-        openDialog(entry);
-      });
-    }
-
-    function buildEntryFromForm() {
-      const distance = parseDistanceText(elements.distance.value.trim()) || 0;
-      const fuel = Number(elements.fuel.value);
-      const dateStr = elements.date.value;
-      const timestamp = dateStr ? new Date(dateStr + 'T00:00:00').getTime() : Date.now();
-      const ratio = computeRatio(distance, fuel);
-      return {
-        id: state.editId || id(),
-        date: dateStr,
-        distance,
-        fuel,
-        ratio,
-        notes: elements.notes.value.trim(),
-        timestamp,
-      };
-    }
-
-    function renderAll() {
-      renderStats();
-      renderHistory();
     }
 
     function wireEvents() {
       elements.fab.addEventListener('click', () => openDialog());
-      elements.cancel.addEventListener('click', closeDialog);
-      ['input', 'change'].forEach((evt) => {
-        elements.form.addEventListener(evt, updateSubmitState);
+      elements.cancel.addEventListener('click', () => requestCloseDialog());
+
+      elements.form.addEventListener('input', (event) => {
+        handleFieldInput(event.target);
+        updateFormState();
       });
-      elements.form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (!validateForm()) return;
-        const entry = buildEntryFromForm();
-        if (entry.ratio === null) {
-          elements.errors.fuel.textContent = 'Hitungan tidak valid (periksa nilai BBM)';
+
+      elements.form.addEventListener('focusout', (event) => {
+        const key = fieldKey(event.target);
+        if (!key) return;
+        state.touched[key] = true;
+        if (key === 'cost' || key === 'price') {
+          const value = parseRupiah(event.target.value);
+          setRupiahField(event.target, value);
+          if (TRIAD.includes(key)) recomputeTriad();
+        }
+        updateFormState();
+      });
+
+      elements.fuelType.addEventListener('change', () => {
+        const type = elements.fuelType.value;
+        if (!type) return;
+        const price = state.data.settings.fuelPrices[type];
+        if (price) {
+          setRupiahField(elements.price, price);
+          noteTriadEdit('price');
+          recomputeTriad();
+        }
+        updateFormState();
+      });
+
+      elements.chips.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-amount]');
+        if (!button) return;
+        setRupiahField(elements.cost, Number(button.dataset.amount));
+        state.touched.cost = true;
+        noteTriadEdit('cost');
+        recomputeTriad();
+        updateFormState();
+      });
+
+      elements.modeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          state.formMode = button.dataset.mode === 'odometer' ? 'odometer' : 'trip';
+          if (state.data.settings.entryMode !== state.formMode) {
+            state.data.settings.entryMode = state.formMode;
+            saveData();
+          }
+          applyFormMode();
+          updateFormState();
+        });
+      });
+
+      const ERROR_ORDER = ['odometer', 'distance', 'cost', 'price', 'fuel', 'date', 'notes'];
+
+      function focusFirstError() {
+        const key = ERROR_ORDER.find((k) => state.formErrors[k]);
+        if (!key) return;
+        const input = document.getElementById(key);
+        if (!input) return;
+        input.focus({ preventScroll: true });
+        input.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      }
+
+      // Save is always enabled; a submit attempt paints every error and jumps to the first.
+      elements.form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        state.submitted = true;
+        state.formErrors = computeErrors();
+        paintErrors();
+        if (Object.keys(state.formErrors).length) {
+          focusFirstError();
           return;
         }
-        if (state.editId) {
-          updateEntry(entry);
-        } else {
-          addEntry(entry);
+        const entry = buildEntryFromForm();
+        if (computeRatio(entry.distance, entry.fuel) === null) {
+          state.formErrors.fuel = 'Hitungan tidak valid (periksa nilai BBM)';
+          paintErrors();
+          focusFirstError();
+          return;
         }
+        const editing = Boolean(state.editId);
+        const saved = editing ? updateEntry(entry) : addEntry(entry);
         closeDialog();
+        if (saved) toast(editing ? 'Catatan diperbarui.' : 'Catatan tersimpan.', 'info', { duration: 2500 });
       });
 
       elements.mapPaste.addEventListener('click', pasteFromClipboard);
@@ -1075,36 +4181,442 @@
         state.mapIntent = true;
         startPasteCue();
       });
-      elements.themeToggle.addEventListener('click', cycleTheme);
+      elements.distance.addEventListener('paste', (event) => {
+        const text = event.clipboardData?.getData('text');
+        if (text) {
+          event.preventDefault();
+          elements.distance.value = text;
+          applyMapDistance();
+        }
+      });
+
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && state.mapIntent) {
+        if (document.visibilityState === 'visible' && state.mapIntent && elements.dialog.open) {
           startPasteCue();
           elements.distance.focus();
           elements.distance.select?.();
         }
       });
-      elements.distance.addEventListener('paste', (e) => {
-        const text = e.clipboardData?.getData('text');
-        if (text) {
-          e.preventDefault();
-          elements.distance.value = text;
-          applyMapDistance();
-        }
+
+      // Backdrop dismissal must start AND end on the backdrop, otherwise a
+      // select-drag that lifts outside the modal would discard the entry.
+      elements.dialog.addEventListener('pointerdown', (event) => {
+        state.backdropDown = event.target === elements.dialog;
       });
       elements.dialog.addEventListener('click', (event) => {
-        if (event.target === elements.dialog) {
-          closeDialog();
+        const onBackdrop = state.backdropDown && event.target === elements.dialog;
+        state.backdropDown = false;
+        if (onBackdrop) requestCloseDialog();
+      });
+      elements.dialog.addEventListener('cancel', (event) => {
+        if (!isFormDirty()) return;
+        event.preventDefault();
+        requestCloseDialog();
+      });
+      // Escape bypasses closeDialog(), so teardown lives on the close event.
+      elements.dialog.addEventListener('close', () => {
+        state.editId = null;
+        state.mapIntent = false;
+      });
+
+      // Every dialog resets its entrance class and restores focus to whatever opened
+      // it (Escape bypasses any dedicated close function, so this is the one place
+      // that always runs) so the next open animates again and focus never lands on body.
+      document.querySelectorAll('dialog').forEach((dlg) => {
+        dlg.addEventListener('close', () => {
+          dlg.classList.remove('is-open');
+          placeToasts();
+          const invoker = dlg._invoker;
+          dlg._invoker = null;
+          if (invoker && document.body.contains(invoker)) invoker.focus({ preventScroll: true });
+        });
+      });
+
+      elements.nudges.addEventListener('click', (event) => {
+        const actionBtn = event.target.closest('[data-nudge-action]');
+        if (actionBtn) {
+          const item = state.nudgeIndex && state.nudgeIndex.get(actionBtn.dataset.nudgeAction);
+          if (item && item.action) item.action();
+          return;
+        }
+        const closeBtn = event.target.closest('[data-nudge-dismiss]');
+        if (!closeBtn) return;
+        const key = closeBtn.dataset.nudgeDismiss;
+        if (key === 'refill') {
+          state.dismissed.refill = true;
+          renderNudges();
+        } else if (key === 'backup') {
+          state.data.settings.backupNudgeDismissedAt = Date.now();
+          saveData();
+          renderNudges();
+        } else if (key === 'install') {
+          deferredInstallPrompt = null; // dismiss = not now, not "never" — it can come back next load
+          renderNudges();
+        } else if (key === 'install-ios') {
+          state.data.settings.iosInstallHintShown = true;
+          saveData();
+          renderNudges();
+        } else {
+          dismissMessage(key);
+        }
+      });
+
+      elements.settingsBtn.addEventListener('click', openSettings);
+      elements.settingsClose.addEventListener('click', () => closeSheet(elements.settingsDialog));
+      elements.settingsDialog.addEventListener('pointerdown', (event) => {
+        state.settingsBackdropDown = event.target === elements.settingsDialog;
+      });
+      elements.settingsDialog.addEventListener('click', (event) => {
+        const onBackdrop = state.settingsBackdropDown && event.target === elements.settingsDialog;
+        state.settingsBackdropDown = false;
+        if (onBackdrop) elements.settingsDialog.close();
+      });
+      elements.settingsDialog.addEventListener('close', clearImportPreview);
+
+      document.querySelectorAll('input[name="entry-mode"]').forEach((input) => {
+        input.addEventListener('change', () => {
+          if (!input.checked) return;
+          state.data.settings.entryMode = input.value === 'odometer' ? 'odometer' : 'trip';
+          saveData();
+        });
+      });
+
+      elements.priceSettings.addEventListener('input', (event) => {
+        const input = event.target.closest('input[data-fuel-type]');
+        if (input) liveFormatRupiah(input);
+      });
+      elements.priceSettings.addEventListener('focusout', (event) => {
+        const input = event.target.closest('input[data-fuel-type]');
+        if (!input) return;
+        const value = parseRupiah(input.value);
+        if (value && value > 0) state.data.settings.fuelPrices[input.dataset.fuelType] = value;
+        setRupiahField(input, state.data.settings.fuelPrices[input.dataset.fuelType]);
+        saveData();
+      });
+
+      elements.exportCsv.addEventListener('click', exportCsv);
+      elements.exportJson.addEventListener('click', exportJson);
+      elements.importBtn.addEventListener('click', () => elements.importFile.click());
+      elements.importFile.addEventListener('change', () => {
+        handleImportFile(elements.importFile.files && elements.importFile.files[0]);
+        elements.importFile.value = '';
+      });
+      elements.exportQuarantine.addEventListener('click', exportQuarantine);
+      elements.clearQuarantine.addEventListener('click', async () => {
+        const ok = await confirmSheet({
+          title: 'Buang catatan bermasalah?',
+          text: 'Ekspor JSON mentahnya dulu kalau masih mau diperbaiki manual.',
+          confirmLabel: 'Buang',
+          danger: true,
+        });
+        if (!ok) return;
+        state.data.quarantine = [];
+        saveData();
+        renderAll();
+      });
+
+      elements.clearSample.addEventListener('click', clearSampleData);
+      elements.replayIntro.addEventListener('click', () => {
+        closeSheet(elements.settingsDialog);
+        setTimeout(openOnboarding, prefersReducedMotion() ? 0 : 260);
+      });
+
+      elements.themeToggle.addEventListener('click', cycleTheme);
+
+      wireToasts();
+      wireHistory();
+      wireChart();
+      wireSheets();
+
+      if ('ResizeObserver' in window) {
+        new ResizeObserver(syncHeaderHeight).observe(elements.header);
+      } else {
+        window.addEventListener('resize', syncHeaderHeight);
+      }
+
+      // 1px sentinel above the header drives the compact state — no scroll listener.
+      if ('IntersectionObserver' in window && elements.sentinel) {
+        new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            elements.header.classList.toggle('is-compact', !entry.isIntersecting);
+          });
+        }, { threshold: 0 }).observe(elements.sentinel);
+      }
+    }
+
+    /* ---------- History interactions ---------- */
+
+    const press = { timer: null, x: 0, y: 0, node: null, id: null, fired: false };
+
+    function clearPress() {
+      if (press.timer) clearTimeout(press.timer);
+      press.timer = null;
+      if (press.node) press.node.classList.remove('is-pressing');
+      press.node = null;
+    }
+
+    function wireHistory() {
+      const host = elements.history;
+
+      host.addEventListener('pointerdown', (event) => {
+        const card = event.target.closest('.card');
+        if (!card || event.target.closest('.card-menu')) return;
+        press.fired = false;
+        press.id = card.dataset.id;
+        press.x = event.clientX;
+        press.y = event.clientY;
+        press.node = card;
+        card.classList.add('is-pressing');
+        const entryId = card.dataset.id;
+        press.timer = setTimeout(() => {
+          press.timer = null;
+          press.fired = true;
+          if (navigator.vibrate) navigator.vibrate(12);
+          clearPress();
+          openActionSheet(entryId);
+        }, 550);
+      });
+
+      // A slow scroll must not read as a long press.
+      host.addEventListener('pointermove', (event) => {
+        if (!press.timer) return;
+        if (Math.abs(event.clientX - press.x) > 10 || Math.abs(event.clientY - press.y) > 10) clearPress();
+      });
+
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((name) => {
+        host.addEventListener(name, () => { if (press.timer) clearPress(); });
+      });
+
+      host.addEventListener('click', (event) => {
+        const act = event.target.closest('[data-act]');
+        if (act) {
+          if (act.dataset.act === 'add') openDialog();
+          else if (act.dataset.act === 'sample') loadSampleData();
+          return;
+        }
+        const menu = event.target.closest('.card-menu');
+        if (menu) {
+          openActionSheet(menu.closest('.card').dataset.id);
+          return;
+        }
+        const card = event.target.closest('.card');
+        if (!card) return;
+        if (press.fired) { press.fired = false; return; }
+        openEntryById(card.dataset.id);
+      });
+
+      // Cards are tabindex=0/role=button; the nested ⋯ button handles its own Enter/Space.
+      host.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+        const card = event.target.closest('.card');
+        if (!card || event.target.closest('.card-menu')) return;
+        event.preventDefault();
+        openEntryById(card.dataset.id);
+      });
+    }
+
+    /* ---------- Chart interactions ---------- */
+
+    function wireChart() {
+      elements.seriesButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          if (button.disabled) return;
+          state.chartSeries = button.dataset.series === 'cost' ? 'cost' : 'ratio';
+          state.data.settings.chartSeries = state.chartSeries;
+          saveData();
+          renderChart();
+        });
+      });
+
+      const canvas = elements.chartCanvas;
+      canvas.addEventListener('pointerdown', (event) => scrubAt(event.clientX));
+      canvas.addEventListener('pointermove', (event) => {
+        if (event.pointerType === 'mouse' && event.buttons === 0) return;
+        scrubAt(event.clientX);
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((name) => {
+        canvas.addEventListener(name, endScrub);
+      });
+
+      if ('ResizeObserver' in window) {
+        new ResizeObserver(() => drawChart()).observe(elements.chartWrap);
+      } else {
+        window.addEventListener('resize', () => drawChart());
+      }
+    }
+
+    /* ---------- Sheets ---------- */
+
+    function wireSheets() {
+      elements.actionEdit.addEventListener('click', () => {
+        const entryId = state.actionId;
+        closeSheet(elements.actionSheet);
+        setTimeout(() => openEntryById(entryId), prefersReducedMotion() ? 0 : 240);
+      });
+
+      elements.actionDelete.addEventListener('click', () => {
+        const entryId = state.actionId;
+        closeSheet(elements.actionSheet);
+        deleteEntry(entryId);
+      });
+
+      elements.actionCancel.addEventListener('click', () => closeSheet(elements.actionSheet));
+
+      elements.confirmOk.addEventListener('click', () => {
+        closeSheet(elements.confirmDialog);
+        settleConfirm(true);
+      });
+      elements.confirmCancel.addEventListener('click', () => {
+        closeSheet(elements.confirmDialog);
+        settleConfirm(false);
+      });
+      // Escape / backdrop resolve as "no".
+      elements.confirmDialog.addEventListener('close', () => settleConfirm(false));
+
+      [elements.actionSheet, elements.confirmDialog, elements.onboardDialog].forEach((dlg) => {
+        dlg.addEventListener('pointerdown', (event) => { dlg.dataset.down = String(event.target === dlg); });
+        dlg.addEventListener('click', (event) => {
+          const onBackdrop = dlg.dataset.down === 'true' && event.target === dlg;
+          dlg.dataset.down = 'false';
+          if (onBackdrop && dlg !== elements.onboardDialog) closeSheet(dlg);
+        });
+      });
+
+      elements.onboardBody.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-onboard-mode]');
+        if (!button) return;
+        const mode = button.dataset.onboardMode === 'odometer' ? 'odometer' : 'trip';
+        state.data.settings.entryMode = mode;
+        saveData();
+        elements.onboardBody.querySelectorAll('[data-onboard-mode]').forEach((btn) => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.onboardMode === mode));
+        });
+        renderSettings();
+      });
+
+      elements.onboardNext.addEventListener('click', () => {
+        if (state.onboardStep < 2) {
+          state.onboardStep += 1;
+          renderOnboard();
+          return;
+        }
+        finishOnboarding(true);
+      });
+
+      elements.onboardSkip.addEventListener('click', () => {
+        if (state.onboardStep === 0) finishOnboarding(false);
+        else {
+          state.onboardStep -= 1;
+          renderOnboard();
         }
       });
     }
 
+    /* ============================== PWA / THEME ============================== */
+
+    // Android ignores SVG maskable icons, so the mark is rasterised at runtime.
+    // 20% safe padding keeps the glyph inside the maskable safe zone.
+    function renderIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      const radius = size * 0.22;
+      roundRectPath(ctx, 0, 0, size, size, radius);
+      ctx.fillStyle = BRAND_BG;
+      ctx.fill();
+
+      const scale = (size * 0.6) / 128;
+      const offset = size * 0.2;
+      ctx.save();
+      ctx.translate(offset, offset);
+      ctx.scale(scale, scale);
+      ctx.strokeStyle = BRAND_ACCENT;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.stroke(new Path2D(MARK_ARC));
+      ctx.fillStyle = '#ffffff';
+      ctx.fill(new Path2D(MARK_DROP));
+      ctx.restore();
+
+      try {
+        return canvas.toDataURL('image/png');
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // Kept so applyThemeColor can retint the manifest when the theme changes.
+    let manifestLink = null;
+    let manifestData = null;
+
+    // Runs at parse time (called top-level, not gated on DOMContentLoaded) so the
+    // manifest and icons are in <head> as early as possible. A data: URI is used
+    // instead of a Blob URL — nothing to revoke, so nothing to leak.
     function installManifest() {
-      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-      const url = URL.createObjectURL(blob);
+      let icons = [];
+      let icon180 = null;
+      let icon192 = null;
+      try {
+        icon180 = renderIcon(180);
+        icon192 = renderIcon(192);
+        const icon512 = renderIcon(512);
+        if (icon192) icons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' });
+        if (icon512) icons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' });
+      } catch (_) {
+        icons = [];
+      }
+
+      // start_url/scope/id derive from the current location so the app works
+      // whether it's served at the origin root or from a sub-path.
+      const path = location.pathname || '/';
+      const scopeDir = path.slice(0, path.lastIndexOf('/') + 1) || '/';
+
+      const manifest = {
+        id: path,
+        name: 'Fuel Tracker',
+        short_name: 'Fuel',
+        description: 'Catat konsumsi BBM motor dengan metode isi penuh. Semua data tersimpan di HP kamu.',
+        start_url: path,
+        scope: scopeDir,
+        display: 'standalone',
+        orientation: 'portrait',
+        lang: 'id',
+        theme_color: '#ffffff',
+        background_color: '#f6f8fb',
+        icons,
+      };
+
+      const dataUri = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
       const link = document.createElement('link');
       link.rel = 'manifest';
-      link.href = url;
+      link.href = dataUri;
       document.head.appendChild(link);
+      manifestLink = link;
+      manifestData = manifest;
+
+      // iOS ignores the manifest's icons entirely and wants its own link, ideally 180x180.
+      if (icon180) {
+        const apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        apple.setAttribute('sizes', '180x180');
+        apple.href = icon180;
+        document.head.appendChild(apple);
+      }
+      if (icon192) {
+        const apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        apple.setAttribute('sizes', '192x192');
+        apple.href = icon192;
+        document.head.appendChild(apple);
+
+        const favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = icon192;
+        document.head.appendChild(favicon);
+      }
     }
 
     function systemPrefersDark() {
@@ -1119,7 +4631,8 @@
 
     function applyThemeColor(effective) {
       const theme = effective || effectiveTheme();
-      const color = theme === 'dark' ? '#0b1220' : '#ffffff';
+      // Match the sticky header surface, which is what sits under the status bar.
+      const color = theme === 'dark' ? '#0f172a' : '#ffffff';
       let meta = document.querySelector('meta[name="theme-color"]');
       if (!meta) {
         meta = document.createElement('meta');
@@ -1127,6 +4640,11 @@
         document.head.appendChild(meta);
       }
       meta.setAttribute('content', color);
+      if (manifestLink && manifestData) {
+        manifestData.theme_color = color;
+        manifestData.background_color = theme === 'dark' ? '#0b1220' : '#f6f8fb';
+        manifestLink.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifestData));
+      }
     }
 
     function setThemeAttributes() {
@@ -1139,6 +4657,8 @@
       }
       applyThemeColor(eff);
       updateThemeToggleLabel(setting, eff);
+      // Chart colours are read from custom properties, so a theme flip needs a redraw.
+      if (state.chartPoints && state.chartPoints.length) requestAnimationFrame(() => drawChart());
     }
 
     function updateThemeToggleLabel(setting, eff) {
@@ -1152,11 +4672,10 @@
     }
 
     function cycleTheme() {
-      const order = ['auto', 'dark', 'light'];
-      const current = (state.data && state.data.settings && state.data.settings.darkMode) || 'auto';
-      const next = order[(order.indexOf(current) + 1) % order.length];
       if (!state.data) return;
-      state.data.settings.darkMode = next;
+      const order = ['auto', 'dark', 'light'];
+      const current = state.data.settings.darkMode || 'auto';
+      state.data.settings.darkMode = order[(order.indexOf(current) + 1) % order.length];
       saveData();
       setThemeAttributes();
     }
@@ -1165,28 +4684,115 @@
       if (!window.matchMedia) return;
       state.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       state.mediaQuery.addEventListener('change', () => {
-        if ((state.data.settings && state.data.settings.darkMode) === 'auto') {
-          setThemeAttributes();
-        }
+        if (state.data && state.data.settings.darkMode === 'auto') setThemeAttributes();
+      });
+    }
+
+    // A Blob/inline URL can never be used to register a service worker (the spec
+    // requires an http(s) script URL), so this ships as a real sibling file.
+    // The query string threads APP_VERSION into the SW's cache name.
+    function promptSwUpdate(registration) {
+      notify('Versi baru tersedia.', 'info', {
+        persistent: true,
+        actionLabel: 'Muat ulang',
+        action: () => {
+          const waiting = registration.waiting;
+          if (waiting) waiting.postMessage('SKIP_WAITING');
+        },
       });
     }
 
     function registerServiceWorker() {
       if (!('serviceWorker' in navigator)) return;
-      const blob = new Blob([swScript], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-      navigator.serviceWorker.register(url).catch((err) => console.error('SW register failed', err));
+      const swUrl = new URL(`sw.js?v=${encodeURIComponent(APP_VERSION)}`, location.href);
+      navigator.serviceWorker.register(swUrl).then((registration) => {
+        if (registration.waiting && navigator.serviceWorker.controller) {
+          promptSwUpdate(registration);
+        }
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              promptSwUpdate(registration);
+            }
+          });
+        });
+      }).catch((err) => console.error('SW register failed', err));
+
+      // Boolean-guarded: SKIP_WAITING fires controllerchange once per activation,
+      // never an unconditional/looping reload.
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
     }
 
+    /* ============================== INSTALL PROMPT ============================== */
+
+    let deferredInstallPrompt = null;
+
+    function isStandaloneDisplay() {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+        || window.navigator.standalone === true;
+    }
+
+    function isIosDevice() {
+      return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function bindInstallPrompt() {
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        renderNudges();
+      });
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        renderNudges();
+      });
+    }
+
+    /* ============================== ERROR BOUNDARY ============================== */
+
+    // Catches whatever the rest of the app missed. Data is already on disk by the
+    // time any render-time error could happen, so the escape hatch is just export.
+    function showCrashScreen(error) {
+      console.error('Unhandled error', error);
+      if (elements.crashScreen) elements.crashScreen.hidden = false;
+    }
+
+    function wireCrashScreen() {
+      window.addEventListener('error', (event) => showCrashScreen(event.error || event.message));
+      window.addEventListener('unhandledrejection', (event) => showCrashScreen(event.reason));
+      elements.crashExport?.addEventListener('click', () => {
+        try { if (state.data) exportJson(); } catch (err) { console.error(err); }
+      });
+      elements.crashReload?.addEventListener('click', () => location.reload());
+    }
+
+    /* ============================== INIT ============================== */
+
+    // Manifest injection and error-boundary wiring happen as soon as the script
+    // parses (not gated on DOMContentLoaded) so they're active even if init() below throws.
+    installManifest();
+    wireCrashScreen();
+    bindInstallPrompt();
+
     function init() {
-      installManifest();
       registerServiceWorker();
       bindThemeWatcher();
+      fillFuelTypeOptions();
       loadData();
+      state.chartSeries = state.data.settings.chartSeries === 'cost' ? 'cost' : 'ratio';
       setThemeAttributes();
-      sortEntries();
       renderAll();
       wireEvents();
+
+      if (!state.data.settings.onboarded) openOnboarding();
+      else showCoachMark();
     }
 
     document.addEventListener('DOMContentLoaded', init);

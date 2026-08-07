@@ -1,31 +1,73 @@
 # Roadmap
 
-## 0.1 — Stability & UX
-- [ ] Show “saving error” toast with retry on LocalStorage/quota failures.
-- [ ] Custom delete confirm with undo (5s), no `confirm()`.
-- [ ] Refine tooltip/helper copy for non-technical users.
-- [ ] Accessibility audit: dialog focus trap, ARIA live for errors/success.
+Status as of the current release. Everything under "Shipped" landed across
+three implementation waves (data/core, UX overhaul, PWA/accessibility/perf);
+see git history for detail.
 
-## 0.2 — Data & Export
-- [ ] CSV export via data URI (no import).
-- [ ] Manual JSON backup/restore if safe.
-- [ ] Sort/filter: date range, note search.
+## Shipped
 
-## 0.3 — Visuals & Charts
-- [ ] Consumption trend chart (Canvas) with light smoothing.
-- [ ] Dense list mode for small screens; compact card option.
-- [ ] Subtle animations for add/edit/delete.
+**Stability & data**
+- [x] Schema versioning + automatic migration ladder; unreadable rows are
+  quarantined (with raw-JSON export) instead of silently dropped.
+- [x] Transactional saves — a failed write rolls memory back to match disk
+  and re-renders, instead of leaving the screen out of sync.
+- [x] Quota-exceeded detection with an immediate backup offer.
+- [x] Custom delete confirmation with a 5-second undo toast — no `confirm()`
+  anywhere in the app.
+- [x] Fixed: blank-form-opens-with-errors, UTC-date-before-7am, comma-decimal
+  fuel input, and backdrop-drag-discards-entry bugs.
 
-## 0.4 — PWA & Devices
-- [ ] Lightweight badge/notification (e.g., refill reminder) if permitted.
-- [ ] Offline optimization with explicit cache busting.
-- [ ] iOS install polish (icons, splash metadata).
+**Money & data & export**
+- [x] Rupiah-first entry (cost / price-per-litre / litres, three-way
+  binding) with per-fuel-type remembered prices.
+- [x] Odometer entry mode with derived distance and partial-fill tracking.
+- [x] Cost-per-km dashboard, monthly spend breakdown with trend deltas.
+- [x] CSV export (semicolon-delimited, comma decimals, formula-injection
+  safe) and full JSON backup/restore with a merge/replace dry-run preview.
 
-## 0.5 — Easier Distance Input (no API key)
-- [ ] Auto-parse “km” patterns from clipboard when dialog is open.
-- [ ] Desktop bookmarklet/extension to copy distance from maps.google.com into clipboard.
-- [ ] Mobile helper microcopy: step-by-step for copying from Maps app.
+**Visuals & motion**
+- [x] Canvas consumption trend chart (km/L or Rp/km) with scrubbing, moving
+  average, and threshold coloring — no charting library.
+- [x] Full design-token pass: fluid type scale, spacing/radius/elevation
+  ramps, a single motion vocabulary honoring `prefers-reduced-motion`.
+- [x] Redesigned history cards, sticky-compact stats header, bottom-sheet
+  entry form, onboarding flow with a sample-data option.
 
-## 0.6 — (Optional, needs API key)
-- [ ] Route/distance fetch from pasted link via routing API (Google Directions/OpenRoute).
-- [ ] Cache route results to save quota; graceful fallback to manual input.***
+**PWA & devices**
+- [x] Real service worker (`sw.js`) — the previous Blob-URL registration
+  never actually worked. Network-first-with-timeout navigations, stale-cache
+  cleanup, and an update-available toast with an explicit reload (no silent
+  version swaps under an open tab).
+- [x] Manifest + icons generated at load, `start_url`/`scope` derived from
+  the page's own location so it works from any sub-path.
+- [x] iOS home-screen polish: real 180×180 apple-touch-icon, safe-area-aware
+  layout, status bar meta.
+- [x] In-app install nudge (`beforeinstallprompt`) plus a one-time iOS
+  Share-sheet hint.
+- [x] Accessibility pass: keyboard-operable history cards, dialog focus
+  restored to the invoking element on close, live-announced form errors,
+  crash screen with an export escape hatch.
+
+## Deferred
+
+Recorded here on purpose, not forgotten:
+
+- **Multi-vehicle garage.** Track more than one motorcycle/car with separate
+  histories and stats. Meaningfully changes the data model (every entry
+  needs a vehicle reference) and the stats/chart aggregation, so it's a
+  release of its own rather than a bolt-on.
+- **Shareable stats card.** Render a shareable summary image (Canvas →
+  PNG/share sheet) for social posting — "my bike did X km/L this month".
+  Pure addition, no data model impact; good candidate for a future pass once
+  there's a design for it.
+- **English localization.** All copy is currently Indonesian by design for
+  this release; the codebase already keeps user-facing strings reasonably
+  separated to make an i18n layer straightforward later, but no language
+  switcher exists yet.
+
+## Known issue carried forward
+
+- **Naming conflict with Sygic's "Fuelio".** An existing, unrelated
+  navigation app already uses this name on app stores. A rename is
+  recommended before any public/store distribution, but is explicitly out of
+  scope for this release — see the README's Known Issues section.
