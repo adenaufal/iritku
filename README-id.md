@@ -12,7 +12,7 @@ pelacakan. Semua yang kamu masukkan tetap di HP kamu.
 
 Seluruh antarmukanya berbahasa Indonesia.
 
-[**Demo langsung →**](https://fuelio.netlify.app)
+[**Buka aplikasinya →**](https://iritku.pages.dev)
 
 ## Tangkapan layar
 

@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       if (self.registration.navigationPreload) {
-        try { await self.registration.navigationPreload.enable(); } catch (_) { /* unsupported */ }
+        try { await self.registration.navigationPreload.enable(); } catch { /* unsupported */ }
       }
       const keys = await caches.keys();
       await Promise.all(
@@ -56,12 +56,12 @@ async function networkFirstNavigation(event) {
   try {
     const preload = await event.preloadResponse;
     if (preload) return preload;
-  } catch (_) { /* ignore, fall through to network/cache */ }
+  } catch { /* ignore, fall through to network/cache */ }
 
   try {
     const network = await Promise.race([fetch(event.request), timeoutAfter(NAV_TIMEOUT_MS)]);
     if (network) return network;
-  } catch (_) { /* offline or request failed — fall back to the cached shell */ }
+  } catch { /* offline or request failed — fall back to the cached shell */ }
 
   const cached = (await cache.match(self.registration.scope + 'index.html')) || (await cache.match(self.registration.scope));
   return cached || Response.error();

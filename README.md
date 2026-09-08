@@ -11,7 +11,7 @@ no backend, no account, no tracking. Everything you enter stays on your phone.
 
 The interface is entirely in Bahasa Indonesia.
 
-[**Live demo →**](https://fuelio.netlify.app)
+[**Live app →**](https://iritku.pages.dev)
 
 ## Screenshots
 

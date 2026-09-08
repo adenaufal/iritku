@@ -19,8 +19,10 @@ wins.
   registered from a Blob or `data:` URL — the spec requires a real same-origin
   script URL — so this one file has to exist on disk. Do not add a third
   script file; if you think you need one, you almost certainly don't.
-- **`index.html` and `sw.js` must stay at the repository root.** Netlify serves
-  the repo root; moving them breaks the deploy and the service-worker scope.
+- **`index.html` and `sw.js` must stay at the repository root.** The site is
+  hosted on Cloudflare Pages (`iritku.pages.dev`), deployed from exactly these
+  two files; moving them breaks the service-worker scope and the runtime-
+  generated manifest/icon paths.
 - The **web app manifest and all icons are generated at runtime** (canvas →
   PNG data URIs, injected as a `data:` URI `<link rel="manifest">`). There are
   no icon files to update. The app icon is a droplet/gauge mark, no lettering.
@@ -81,8 +83,22 @@ wins.
   another change.
 - The product is **Iritku** ("irit" + "-ku"). Tagline: *Catat bensin, tahu
   Rp/km.* The old names "Fuel Tracker" and "Fuelio" must not appear in
-  user-facing copy. The string `fuelio` surviving in the repo/Netlify URL is
-  expected until the owner renames those manually.
+  user-facing copy.
+
+## Deploy
+
+- Hosting is **Cloudflare Pages**, project `iritku` → https://iritku.pages.dev.
+  The old Netlify site (`fuelio.netlify.app`) is retired.
+- **Production deploy** (after staging the site files):
+
+  ```bash
+  STAGE=$(mktemp -d) && cp index.html sw.js "$STAGE/"
+  npx wrangler pages deploy "$STAGE" --project-name=iritku --branch=main
+  ```
+
+- Direct-upload deploys are not wired to Git; re-run the command above after
+  meaningful changes, or ask the owner to add a deploy hook/Action if pushes
+  should auto-deploy.
 
 ## Service worker
 
@@ -134,7 +150,7 @@ No test runner, no CI. Before declaring a change done:
 ## Repository layout
 
 ```
-/            index.html, sw.js, README.md, README-id.md, AGENTS.md, .gitignore
+/            index.html, sw.js, README.md, README-id.md, AGENTS.md, LICENSE, .gitignore
 /docs        ROADMAP.md, ROADMAP-id.md, SPEC.md (historical v1), screenshots/
 ```
 
