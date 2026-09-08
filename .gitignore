@@ -1,3 +1,11 @@
-/archive/
-/archive
-archive/
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+
+# Local
+node_modules/

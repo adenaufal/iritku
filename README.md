@@ -199,4 +199,8 @@ Two things remain outside what a code change can do:
   [`AGENTS.md`](AGENTS.md). The original v1 brief is kept for provenance at
   [`docs/SPEC.md`](docs/SPEC.md) and is no longer accurate.
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 Bahasa Indonesia version of this document: [`README-id.md`](README-id.md).

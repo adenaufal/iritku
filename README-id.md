@@ -208,4 +208,8 @@ Dua hal masih di luar jangkauan perubahan kode:
   [`AGENTS.md`](AGENTS.md). Brief v1 aslinya disimpan sebagai arsip di
   [`docs/SPEC.md`](docs/SPEC.md) dan sudah tidak akurat.
 
+## Lisensi
+
+MIT — lihat [LICENSE](LICENSE).
+
 Versi Bahasa Inggris dokumen ini: [`README.md`](README.md).
