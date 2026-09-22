@@ -70,8 +70,42 @@ wins.
   cleanup, and an explicit "new version available" prompt — never a silent
   reload under an open tab.
 - **Accessibility:** keyboard-operable history cards, dialog focus returned to
-  the invoking element, live-announced form errors, full reduced-motion
-  support, and a crash screen with a data-export escape hatch.
+  the invoking element, live-announced form errors, a skip link to `#main`,
+  reduced-motion support that drops movement but keeps colour/opacity feedback,
+  and a crash screen with a data-export escape hatch.
+
+## Design system
+
+Changes to the UI go through these; none of them is decorative.
+
+- **No emoji in the interface.** Every icon comes from the `ICONS` map in the
+  inline script (or the matching inline `<svg class="ico">` in the static
+  markup): one 24px grid, `currentColor`, `stroke-width: 1.75` (`2` beside bold
+  text via `.ico-bold`/`.ico-sm`). Emoji do not take `currentColor`, do not
+  match a text weight, and render differently on every platform.
+- **Depth is `--shadow-border`, structure is a border.** Cards, chips, buttons
+  and popovers get the shadow token; dividers, field outlines and separators
+  stay real borders.
+- **Nested radii are concentric:** outer = inner + padding. The history badge is
+  `--r-sm` (8px) because the card is `--r-lg` (20px) with 12px of padding.
+- **One press value.** `--press` (0.96) for controls, `--press-lg` (0.985) for
+  full-width surfaces. Animate `scale`, never `transform: scale()`, so presses
+  compose with other transforms.
+- **Motion budget.** UI transitions stay at or under `--dur-3` (320ms), animate
+  only compositor properties, and always name the properties — never
+  `transition: all`. High-frequency interactions get colour/opacity feedback at
+  `--dur-1` or less, not a custom animation. Interactive state changes use
+  transitions (interruptible); keyframes are for one-shot sequences only.
+- **Motion is never the only channel.** Every state an animation communicates
+  also has a static cue — a colour, an icon, or a label.
+- **Hover is gated.** Hover styling lives inside
+  `@media (hover: hover) and (pointer: fine)`; touch fires false hovers on tap.
+- **Theme flips suppress transitions.** Route every theme change through
+  `withoutTransitions()`, or the whole document crossfades at once.
+- **The top hairline carries the trend.** `--trend` is set from the 30-day
+  delta; it is not a decorative gradient. Do not repurpose it.
+- **Fuel grades have fixed colours** in `FUEL_TONES`. Use them wherever a grade
+  is named.
 
 ## Copy rules
 
@@ -144,8 +178,10 @@ No test runner, no CI. Before declaring a change done:
    legacy `fuelTrackerData` payloads still render, and a JSON backup downloads
    with an `iritku-backup-` filename.
 
-4. **Grep for regressions** in user-facing strings before finishing:
-   `grep -rn "Fuel Tracker\|Fuelio" index.html sw.js`.
+4. **Grep for regressions** before finishing:
+   `grep -rn "Fuel Tracker\|Fuelio" index.html sw.js` for the old names, and
+   `grep -n "transition: all\|transform: scale" index.html` plus a scan for
+   emoji in `button`/`summary` text for design-system drift.
 
 ## Repository layout
 

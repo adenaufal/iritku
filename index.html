@@ -14,7 +14,8 @@
     :root {
       color-scheme: light dark;
 
-      --primary: #3b82f6;
+      --primary: #2f6df6;
+      --primary-ink: #1d4fd8;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
@@ -25,8 +26,17 @@
       --muted: #64748b;
       --panel: rgba(15, 23, 42, 0.045);
       --border: rgba(15, 23, 42, 0.10);
+      --hairline: rgba(15, 23, 42, 0.08);
       --field: #f4f6fa;
       --scrim: rgba(15, 23, 42, 0.45);
+
+      /* Fuel-grade colours, borrowed from the pumps themselves. */
+      --fuel-green: #16a34a;
+      --fuel-blue: #2563eb;
+      --fuel-red: #dc2626;
+      --fuel-cyan: #0891b2;
+      --fuel-amber: #d97706;
+      --fuel-slate: #64748b;
 
       /* Fluid type scale */
       --step--1: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
@@ -55,12 +65,26 @@
       --e2: 0 2px 10px rgba(15, 23, 42, 0.10);
       --e3: 0 12px 30px rgba(15, 23, 42, 0.16);
 
+      /* Depth is a shadow, not a border: transparency adapts to any backdrop. */
+      --shadow-border:
+        0 0 0 1px rgba(15, 23, 42, 0.06),
+        0 1px 2px -1px rgba(15, 23, 42, 0.06),
+        0 2px 4px rgba(15, 23, 42, 0.04);
+      --shadow-border-hover:
+        0 0 0 1px rgba(15, 23, 42, 0.08),
+        0 1px 2px -1px rgba(15, 23, 42, 0.08),
+        0 4px 10px rgba(15, 23, 42, 0.07);
+
       /* Motion vocabulary */
-      --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
       --ease-spring: cubic-bezier(0.2, 1.25, 0.35, 1);
-      --dur-1: 120ms;
+      --dur-1: 150ms;
       --dur-2: 220ms;
       --dur-3: 320ms;
+      --press: 0.96;
+      /* A full-width surface travels further at the same ratio, so it presses less. */
+      --press-lg: 0.985;
 
       --fab-size: 3.5rem;
       --header-h: 8.5rem;
@@ -75,28 +99,55 @@
         --field: #111a2d;
         --text: #e5e7eb;
         --muted: #94a3b8;
+        --primary: #5b8dff;
+        --primary-ink: #93b4ff;
         --panel: rgba(255, 255, 255, 0.05);
         --border: rgba(255, 255, 255, 0.12);
+        --hairline: rgba(255, 255, 255, 0.08);
         --scrim: rgba(2, 6, 23, 0.6);
         --e1: 0 1px 2px rgba(0, 0, 0, 0.4);
         --e2: 0 2px 10px rgba(0, 0, 0, 0.45);
         --e3: 0 16px 40px rgba(0, 0, 0, 0.55);
+        /* Layered depth is invisible on dark: one white ring does the work. */
+        --shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.08);
+        --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.14);
+        --fuel-green: #4ade80;
+        --fuel-blue: #7aa2ff;
+        --fuel-red: #f87171;
+        --fuel-cyan: #38bdf8;
+        --fuel-amber: #fbbf24;
+        --fuel-slate: #94a3b8;
       }
     }
 
     :root[data-theme="dark"] {
+      color-scheme: dark;
       --bg: #0b1220;
       --surface: #0f172a;
       --field: #111a2d;
       --text: #e5e7eb;
       --muted: #94a3b8;
+      --primary: #5b8dff;
+      --primary-ink: #93b4ff;
       --panel: rgba(255, 255, 255, 0.05);
       --border: rgba(255, 255, 255, 0.12);
+      --hairline: rgba(255, 255, 255, 0.08);
       --scrim: rgba(2, 6, 23, 0.6);
       --e1: 0 1px 2px rgba(0, 0, 0, 0.4);
       --e2: 0 2px 10px rgba(0, 0, 0, 0.45);
       --e3: 0 16px 40px rgba(0, 0, 0, 0.55);
+      /* Layered depth is invisible on dark: one white ring does the work. */
+      --shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.08);
+      --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.14);
+      --fuel-green: #4ade80;
+      --fuel-blue: #7aa2ff;
+      --fuel-red: #f87171;
+      --fuel-cyan: #38bdf8;
+      --fuel-amber: #fbbf24;
+      --fuel-slate: #94a3b8;
     }
+
+    :root[data-theme="light"] { color-scheme: light; }
 
     * { box-sizing: border-box; }
 
@@ -111,8 +162,55 @@
       min-height: 100dvh;
       font-size: var(--step-0);
       line-height: 1.45;
+      overflow-x: hidden;
+      text-wrap: pretty;
       -webkit-font-smoothing: antialiased;
     }
+
+    h1, h2, h3 { text-wrap: balance; }
+
+    /* No double-tap zoom delay, no grey flash: presses get their own feedback. */
+    button, a, summary, [role="button"], input, select, textarea, label {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: calc(var(--safe-t) + var(--space-2));
+      left: 50%;
+      translate: -50% -200%;
+      z-index: 60;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: var(--step--1);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--r-pill);
+      box-shadow: var(--e3);
+      text-decoration: none;
+      transition: translate var(--dur-2) var(--ease-out);
+    }
+
+    .skip-link:focus-visible { translate: -50% 0; }
+
+    /* One icon set, one stroke weight, recoloured by currentColor alone. */
+    .ico {
+      width: 1.25rem;
+      height: 1.25rem;
+      display: block;
+      flex: none;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .ico-sm { width: 1rem; height: 1rem; stroke-width: 2; }
+    .ico-lg { width: 1.5rem; height: 1.5rem; }
+    /* Beside 700/800 text an icon needs the heavier stroke to carry equal weight. */
+    .ico-bold { stroke-width: 2; }
 
     .num {
       font-variant-numeric: tabular-nums;
@@ -127,15 +225,18 @@
       margin-left: 0.22em;
     }
 
+    /* The hairline is not decoration: it carries the 30-day efficiency trend,
+       so the one always-visible strip of colour says something true. */
     .bar {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      height: 0.2rem;
-      background: linear-gradient(90deg, var(--primary), var(--success), var(--warning));
-      opacity: 0.7;
+      height: 0.1875rem;
+      background: var(--trend, var(--primary));
+      opacity: 0.9;
       z-index: 30;
+      transition: background var(--dur-3) var(--ease-out);
     }
 
     /* ---------- Sticky stats header ---------- */
@@ -189,20 +290,21 @@
     }
 
     .icon-btn {
-      border: 1px solid var(--border);
+      border: none;
       background: var(--field);
-      color: var(--text);
+      box-shadow: var(--shadow-border);
+      color: var(--muted);
       border-radius: var(--r-pill);
       width: 2.5rem;
       height: 2.5rem;
       display: grid;
       place-items: center;
-      font-size: 1.05rem;
       cursor: pointer;
-      transition: transform var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
     }
 
-    .icon-btn:active { transform: scale(0.94); }
+    @media (hover: hover) and (pointer: fine) {
+      .icon-btn:hover { color: var(--text); box-shadow: var(--shadow-border-hover); }
+    }
 
     .stats-hero {
       display: grid;
@@ -261,7 +363,6 @@
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-2);
       margin-top: var(--space-4);
       overflow: hidden;
       max-height: 6rem;
@@ -269,12 +370,12 @@
     }
 
     .stat {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      padding: var(--space-2) var(--space-3);
+      padding: 0 var(--space-3);
       min-width: 0;
+      border-left: 1px solid var(--hairline);
     }
+
+    .stat:first-child { padding-left: 0; border-left: none; }
 
     .stat .label {
       display: block;
@@ -282,7 +383,7 @@
       letter-spacing: 0.07em;
       font-size: 0.66rem;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .stat .value {
@@ -291,6 +392,15 @@
       margin-top: 0.1rem;
       overflow-wrap: anywhere;
     }
+
+    .hero-tagline {
+      color: var(--muted);
+      font-size: var(--step--1);
+      font-weight: 500;
+    }
+
+    header#app-header.is-empty .head-row { margin-bottom: var(--space-1); }
+    header#app-header.is-empty .stats { display: none; }
 
     header#app-header.is-compact .hero-main .value { font-size: var(--step-1); }
     header#app-header.is-compact .hero-sub,
@@ -354,22 +464,32 @@
     .nudges:empty { display: none; }
 
     .nudge {
+      position: relative;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: var(--space-2);
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--primary);
       border-radius: var(--r-md);
-      box-shadow: var(--e1);
-      padding: var(--space-3);
+      box-shadow: var(--shadow-border);
+      padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 3px);
       font-size: var(--step--1);
       line-height: 1.4;
+      overflow: hidden;
     }
 
-    .nudge.danger { border-left-color: var(--danger); }
-    .nudge.warning { border-left-color: var(--warning); }
+    /* The status stripe is a pseudo-element so the surface keeps one radius. */
+    .nudge::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: var(--tone, var(--primary));
+    }
+
+    .nudge.danger { --tone: var(--danger); }
+    .nudge.warning { --tone: var(--warning); }
     .nudge .nudge-text { flex: 1; min-width: 0; }
+    .nudge .nudge-mark { color: var(--tone, var(--primary)); margin-top: 0.1rem; align-self: flex-start; }
 
     .nudge .nudge-action {
       background: none;
@@ -377,9 +497,12 @@
       color: var(--primary);
       font-weight: 700;
       cursor: pointer;
-      padding: 0;
+      padding: var(--space-2);
+      margin: calc(var(--space-2) * -1);
+      border-radius: var(--r-sm);
       font-size: inherit;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .nudge .nudge-close {
@@ -387,18 +510,26 @@
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 1rem;
-      line-height: 1;
-      padding: 0 0.15rem;
+      line-height: 0;
+      display: grid;
+      place-items: center;
+      width: 2rem;
+      height: 2rem;
+      margin: -0.375rem -0.375rem -0.375rem 0;
+      border-radius: var(--r-pill);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .nudge .nudge-action:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+      .nudge .nudge-close:hover { background: var(--panel); color: var(--text); }
     }
 
     /* ---------- Trend chart ---------- */
 
     .chart-card {
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      box-shadow: var(--e1);
+      box-shadow: var(--shadow-border);
       padding: var(--space-4);
     }
 
@@ -441,7 +572,7 @@
       font-size: var(--step--1);
     }
 
-    .chart-placeholder .spark { color: var(--primary); opacity: 0.5; }
+    .chart-placeholder .spark { color: var(--primary); opacity: 0.55; width: 2.5rem; height: 2.5rem; }
 
     /* ---------- Monthly breakdown ---------- */
 
@@ -450,9 +581,8 @@
 
     .month-row {
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--r-md);
-      box-shadow: var(--e1);
+      box-shadow: var(--shadow-border);
       padding: var(--space-3) var(--space-4);
     }
 
@@ -461,9 +591,19 @@
       justify-content: space-between;
       align-items: baseline;
       gap: var(--space-2);
-      font-weight: 700;
       margin-bottom: var(--space-1);
     }
+
+    /* The month label is the index; the spend is what the row is about. */
+    .month-head > span:first-child {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: var(--step--1);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .month-head .amount { font-weight: 800; letter-spacing: -0.02em; }
 
     .month-head .amount {
       display: inline-flex;
@@ -490,9 +630,8 @@
       align-items: center;
       gap: var(--space-3);
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      box-shadow: var(--e1);
+      box-shadow: var(--shadow-border);
       padding: var(--space-3);
       cursor: pointer;
       user-select: none;
@@ -500,11 +639,18 @@
       -webkit-touch-callout: none;
       content-visibility: auto;
       contain-intrinsic-size: auto 92px;
-      transition: box-shadow var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
+      /* The sticky header must never park itself over a keyboard-focused card. */
+      scroll-margin-top: calc(var(--header-h) + var(--space-3));
+      transition-property: box-shadow, scale;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
     }
 
-    .card:active { box-shadow: var(--e2); }
-    .card.is-pressing { transform: scale(0.98); }
+    .card.is-pressing { scale: var(--press-lg); box-shadow: var(--shadow-border-hover); }
+
+    @media (hover: hover) and (pointer: fine) {
+      .card:hover { box-shadow: var(--shadow-border-hover); }
+    }
 
     .card .badge {
       display: grid;
@@ -512,7 +658,8 @@
       align-content: center;
       min-width: 4.6rem;
       padding: var(--space-2) var(--space-2);
-      border-radius: var(--r-md);
+      /* Concentric: card radius 20px minus its 12px padding. */
+      border-radius: var(--r-sm);
       background: color-mix(in srgb, var(--tone, var(--muted)) 14%, transparent);
       color: var(--tone, var(--muted));
       font-weight: 800;
@@ -584,23 +731,42 @@
       background: transparent;
       color: var(--muted);
       border-radius: var(--r-pill);
-      font-size: 1.2rem;
-      line-height: 1;
+      line-height: 0;
       cursor: pointer;
       display: grid;
       place-items: center;
-      transition: background var(--dur-1) var(--ease-out);
     }
 
     .card-menu:active { background: var(--panel); }
 
+    @media (hover: hover) and (pointer: fine) {
+      .card-menu:hover { background: var(--panel); color: var(--text); }
+    }
+
     .tag {
       display: inline-block;
       background: var(--panel);
-      border: 1px solid var(--border);
       border-radius: var(--r-pill);
+      box-shadow: inset 0 0 0 1px var(--hairline);
       padding: 0.02rem 0.45rem;
       font-size: 0.7rem;
+    }
+
+    /* Fuel grades carry the colour they actually wear at the pump. */
+    .fuel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+      color: inherit;
+    }
+
+    .fuel-tag::before {
+      content: "";
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: var(--r-pill);
+      background: var(--fuel, var(--muted));
+      flex: none;
     }
 
     /* ---------- Empty state / onboarding ---------- */
@@ -612,9 +778,8 @@
       gap: var(--space-3);
       padding: var(--space-7) var(--space-4) var(--space-6);
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      box-shadow: var(--e1);
+      box-shadow: var(--shadow-border);
     }
 
     .empty-state .mark {
@@ -693,16 +858,21 @@
       background: var(--primary);
       color: #fff;
       box-shadow: var(--e3);
-      font-size: 1.7rem;
-      line-height: 1;
+      line-height: 0;
       cursor: pointer;
       display: grid;
       place-items: center;
-      transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+      transition-property: scale, box-shadow, background-color;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
       z-index: 25;
     }
 
-    #fab:active { transform: scale(0.94); }
+    #fab:active { scale: var(--press); }
+
+    @media (hover: hover) and (pointer: fine) {
+      #fab:hover { background: var(--primary-ink); }
+    }
 
     .coach {
       position: fixed;
@@ -718,6 +888,10 @@
       line-height: 1.35;
       z-index: 26;
       animation: coach-in var(--dur-3) var(--ease-spring) both;
+    }
+
+    .coach button {
+      transition: color var(--dur-1) var(--ease-out);
     }
 
     .coach::after {
@@ -777,10 +951,24 @@
       padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
       font-size: var(--step--1);
       line-height: 1.35;
-      animation: toast-in var(--dur-3) var(--ease-out) both;
+      opacity: 0;
+      translate: 0 12px;
+      scale: 0.98;
+      transition-property: opacity, translate, scale;
+      transition-duration: var(--dur-3);
+      transition-timing-function: var(--ease-out);
     }
 
-    .toast.is-leaving { animation: toast-out var(--dur-2) var(--ease-out) both; }
+    .toast.is-in { opacity: 1; translate: 0 0; scale: 1; }
+
+    /* Exits are softer and shorter than entrances. */
+    .toast.is-leaving {
+      opacity: 0;
+      translate: 0 6px;
+      scale: 0.98;
+      transition-duration: var(--dur-2);
+    }
+
     .toast .toast-msg { flex: 1; min-width: 0; }
 
     .toast.tone-danger { background: var(--danger); color: #fff; }
@@ -805,20 +993,22 @@
       color: inherit;
       opacity: 0.7;
       cursor: pointer;
-      font-size: 0.95rem;
-      line-height: 1;
-      padding: var(--space-1);
+      line-height: 0;
+      display: grid;
+      place-items: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: var(--r-pill);
+      flex: none;
+      transition: opacity var(--dur-1) var(--ease-out);
     }
 
-    @keyframes toast-in {
-      from { opacity: 0; transform: translateY(12px) scale(0.98); }
-      to { opacity: 1; transform: none; }
+    .toast .toast-close:active { opacity: 1; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .toast .toast-close:hover { opacity: 1; }
     }
 
-    @keyframes toast-out {
-      from { opacity: 1; transform: none; }
-      to { opacity: 0; transform: translateY(6px) scale(0.98); }
-    }
 
     /* ---------- Dialogs / bottom sheets ---------- */
 
@@ -894,15 +1084,30 @@
       padding: var(--space-2) var(--space-3);
     }
 
-    .explainer > summary {
+    .explainer > summary,
+    .map-helper > summary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
       cursor: pointer;
       font-weight: 700;
       font-size: var(--step--1);
       color: var(--primary);
       list-style: none;
+      min-height: 1.75rem;
     }
 
-    .explainer > summary::-webkit-details-marker { display: none; }
+    .explainer > summary::-webkit-details-marker,
+    .map-helper > summary::-webkit-details-marker { display: none; }
+
+    .explainer .chev,
+    .map-helper .chev {
+      margin-left: auto;
+      transition: rotate var(--dur-2) var(--ease-out);
+    }
+
+    .explainer[open] .chev,
+    .map-helper[open] .chev { rotate: 180deg; }
 
     .explainer .explainer-body {
       margin-top: var(--space-2);
@@ -913,7 +1118,7 @@
 
     form {
       display: grid;
-      gap: var(--space-4);
+      gap: var(--space-3);
     }
 
     label {
@@ -930,11 +1135,19 @@
       gap: var(--space-2);
     }
 
+    label.check {
+      cursor: pointer;
+      min-height: 2.75rem;
+      padding: var(--space-1) 0;
+    }
+
     label.check input {
       width: auto;
       flex: none;
-      min-width: 1.1rem;
-      min-height: 1.1rem;
+      min-width: 1.15rem;
+      min-height: 1.15rem;
+      accent-color: var(--primary);
+      cursor: pointer;
     }
 
     input, textarea, select {
@@ -946,23 +1159,36 @@
       color: var(--text);
       font-size: 1rem;
       font-weight: 500;
-      outline: none;
       font-family: inherit;
+      /* The UA outline is replaced, not removed: the focus ring below is it. */
+      outline: none;
       transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
 
     input::placeholder, textarea::placeholder {
       color: var(--muted);
-      opacity: 0.85;
+      opacity: 1;
       font-weight: 400;
     }
 
     input:focus, textarea:focus, select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent);
     }
 
     :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Fields already draw a ring on focus; the generic outline doubled it. */
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible { outline: none; }
+
+    /* A checkbox has no ring of its own, so it keeps the generic outline. */
+    input[type="checkbox"]:focus-visible,
+    input[type="radio"]:focus-visible {
       outline: 2px solid var(--primary);
       outline-offset: 2px;
     }
@@ -976,9 +1202,16 @@
     .error {
       color: var(--danger);
       font-size: var(--step--1);
-      min-height: 1.1em;
       font-weight: 500;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.35rem;
+      margin-top: 0.15rem;
     }
+
+    .error .ico { margin-top: 0.15rem; }
+
+    .error:empty { display: none; }
 
     .hint {
       color: var(--muted);
@@ -998,8 +1231,10 @@
       font-size: var(--step--1);
       font-weight: 700;
       color: var(--tone, var(--muted));
-      min-height: 1.2em;
+      margin-top: 0.15rem;
     }
+
+    .preview:empty { display: none; }
 
     .seg {
       display: inline-flex;
@@ -1020,12 +1255,20 @@
       padding: 0.35rem 0.8rem;
       border-radius: var(--r-pill);
       cursor: pointer;
-      transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+      transition-property: background-color, color, scale;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
     }
+
+    .seg-btn:active:not(:disabled) { scale: var(--press); }
 
     .seg-btn[aria-pressed="true"] {
       background: var(--primary);
       color: #fff;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .seg-btn:not([aria-pressed="true"]):not(:disabled):hover { color: var(--text); background: var(--panel); }
     }
 
     .seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -1043,8 +1286,9 @@
     .chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
     .chip {
-      border: 1px solid var(--border);
+      border: none;
       background: var(--field);
+      box-shadow: var(--shadow-border);
       color: var(--text);
       border-radius: var(--r-pill);
       padding: 0.4rem 0.85rem;
@@ -1052,10 +1296,16 @@
       font-family: inherit;
       font-size: var(--step--1);
       cursor: pointer;
-      transition: transform var(--dur-1) var(--ease-out);
+      transition-property: scale, box-shadow, background-color;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
     }
 
-    .chip:active { transform: scale(0.96); }
+    .chip:active { scale: var(--press); }
+
+    @media (hover: hover) and (pointer: fine) {
+      .chip:hover { box-shadow: var(--shadow-border-hover); }
+    }
 
     .actions {
       display: flex;
@@ -1081,13 +1331,20 @@
       cursor: pointer;
       font-family: inherit;
       font-size: var(--step-0);
-      transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), opacity var(--dur-2) var(--ease-out);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      min-height: 2.75rem;
+      transition-property: scale, box-shadow, background-color, opacity;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
     }
 
     button.secondary {
       background: var(--field);
       color: var(--text);
-      border: 1px solid var(--border);
+      box-shadow: var(--shadow-border);
     }
 
     button.primary {
@@ -1099,15 +1356,23 @@
     button.danger {
       background: transparent;
       color: var(--danger);
-      border: 1px solid var(--border);
+      box-shadow: var(--shadow-border);
     }
 
-    button.secondary:active, button.primary:active, button.danger:active { transform: scale(0.97); }
+    button.secondary:active:not(:disabled),
+    button.primary:active:not(:disabled),
+    button.danger:active:not(:disabled) { scale: var(--press); }
+
+    @media (hover: hover) and (pointer: fine) {
+      button.primary:not(:disabled):hover { background: var(--primary-ink); }
+      button.secondary:not(:disabled):hover,
+      button.danger:not(:disabled):hover { box-shadow: var(--shadow-border-hover); }
+    }
 
     button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
-      transform: none;
+      scale: 1;
       box-shadow: none;
     }
 
@@ -1148,7 +1413,17 @@
       cursor: pointer;
     }
 
-    .sheet-item:active { background: var(--panel); }
+    .sheet-item {
+      transition-property: background-color, scale;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
+    }
+
+    .sheet-item:active { background: var(--panel); scale: var(--press-lg); }
+
+    @media (hover: hover) and (pointer: fine) {
+      .sheet-item:hover { background: var(--panel); }
+    }
     .sheet-item.danger { color: var(--danger); }
     .sheet-item.muted { color: var(--muted); justify-content: center; }
 
@@ -1240,21 +1515,33 @@
     .map-helper .map-body { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
 
     .helper-hint { color: var(--muted); font-size: var(--step--1); }
-    .helper-error { color: var(--danger); font-size: var(--step--1); min-height: 1.1em; }
+    .helper-error { color: var(--danger); font-size: var(--step--1); }
+    .helper-error:empty { display: none; }
     .helper-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 
     .secondary-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
       text-decoration: none;
       color: var(--primary);
       font-weight: 700;
       font-size: var(--step--1);
-      border: 1px solid var(--border);
+      box-shadow: var(--shadow-border);
       border-radius: var(--r-md);
-      padding: var(--space-2) var(--space-3);
+      /* Optical: the trailing icon needs less room than the leading text. */
+      padding: var(--space-2) calc(var(--space-3) - 2px) var(--space-2) var(--space-3);
+      min-height: 2.5rem;
       background: var(--field);
+      transition-property: scale, box-shadow;
+      transition-duration: var(--dur-1);
+      transition-timing-function: var(--ease-out);
+    }
+
+    .secondary-link:active { scale: var(--press); }
+
+    @media (hover: hover) and (pointer: fine) {
+      .secondary-link:hover { box-shadow: var(--shadow-border-hover); }
     }
 
     .settings-group {
@@ -1269,12 +1556,24 @@
     .settings-actions button { padding: var(--space-2) var(--space-4); font-size: var(--step--1); }
 
     .price-row { display: flex; align-items: center; gap: var(--space-2); }
-    .price-row span { flex: 1; font-size: var(--step--1); min-width: 0; }
+    .price-row > .fuel-tag { flex: 1; font-size: var(--step--1); min-width: 0; }
+
+    .price-field { position: relative; flex: none; width: 9rem; }
+
+    .price-prefix {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      translate: 0 -50%;
+      color: var(--muted);
+      font-size: var(--step--1);
+      font-weight: 600;
+      pointer-events: none;
+    }
 
     .price-row input {
-      width: 8.5rem;
-      flex: none;
-      padding: var(--space-2) var(--space-3);
+      width: 100%;
+      padding: var(--space-2) var(--space-3) var(--space-2) 2.3rem;
       text-align: right;
     }
 
@@ -1288,34 +1587,52 @@
       font-size: var(--step--1);
     }
 
-    .cta-pulse {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 45%, transparent);
-      animation: pulse 1.4s ease-out 0s 3;
+    /* The ring is a pseudo-element so the pulse rides transform + opacity
+       on the compositor instead of repainting a growing box-shadow. */
+    .cta-pulse { position: relative; }
+
+    .cta-pulse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 45%, transparent);
+      pointer-events: none;
+      animation: pulse 1.4s var(--ease-out) 0s 3;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45); }
-      70% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+      0% { opacity: 0.9; scale: 1; }
+      70% { opacity: 0; scale: 1.18; }
+      100% { opacity: 0; scale: 1.18; }
     }
 
     /* ---------- List motion ---------- */
 
     .card.is-stagger {
       animation: card-in var(--dur-3) var(--ease-out) both;
-      animation-delay: calc(var(--i, 0) * 28ms);
+      animation-delay: calc(var(--i, 0) * 40ms);
     }
 
     @keyframes card-in {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: none; }
+      from { opacity: 0; translate: 0 10px; }
+      to { opacity: 1; translate: 0 0; }
     }
 
-    .card.is-new { animation: card-flash 600ms var(--ease-out) both; }
+    /* Fading an overlay beats animating the card's own background colour. */
+    .card.is-new::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: color-mix(in srgb, var(--primary) 14%, transparent);
+      pointer-events: none;
+      animation: card-flash 600ms var(--ease-out) both;
+    }
 
     @keyframes card-flash {
-      from { background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
-      to { background: var(--surface); }
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     /* ---------- Mobile bottom sheet ---------- */
@@ -1328,6 +1645,14 @@
         max-height: 92dvh;
         border-radius: var(--r-lg) var(--r-lg) 0 0;
         transform: translateY(100%);
+      }
+
+      dialog {
+        transition:
+          opacity var(--dur-2) var(--ease-out),
+          transform var(--dur-3) var(--ease-drawer),
+          overlay var(--dur-3) var(--ease-drawer) allow-discrete,
+          display var(--dur-3) var(--ease-drawer) allow-discrete;
       }
 
       @starting-style {
@@ -1365,9 +1690,8 @@
 
     .crash-card {
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      box-shadow: var(--e3);
+      box-shadow: var(--e3), var(--shadow-border);
       padding: var(--space-4);
       max-width: 26rem;
       width: 100%;
@@ -1375,17 +1699,35 @@
 
     /* ---------- Reduced motion kill switch ---------- */
 
+    /* Reduced motion means no travel, not no feedback: colour and opacity
+       still change so every state remains legible without movement. */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
         scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
       }
+
+      button, a, summary, .card, .chip, .seg-btn, .icon-btn, .sheet-item, .toast, input, textarea, select {
+        transition-property: opacity, background-color, color, box-shadow, border-color !important;
+        transition-duration: 120ms !important;
+      }
+
+      .card.is-pressing,
+      .chip:active,
+      .seg-btn:active,
+      #fab:active,
+      .sheet-item:active,
+      button:active { scale: 1 !important; }
+
+      .toast { translate: 0 0; scale: 1; }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main">Lewati ke daftar catatan</a>
   <div class="bar" aria-hidden="true"></div>
   <div id="scroll-sentinel" aria-hidden="true"></div>
 
@@ -1402,10 +1744,10 @@
   <header id="app-header">
     <div class="head-inner">
       <div class="head-row">
-        <h1 class="app-name">Iritku</h1>
+        <h1 class="app-name" translate="no">Iritku</h1>
         <div class="head-actions">
-          <button type="button" id="theme-toggle" class="icon-btn" aria-label="Ubah tema">🌓</button>
-          <button type="button" id="settings-btn" class="icon-btn" aria-label="Pengaturan dan cadangan data">⚙️</button>
+          <button type="button" id="theme-toggle" class="icon-btn" aria-label="Ubah tema"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+          <button type="button" id="settings-btn" class="icon-btn" aria-label="Pengaturan dan cadangan data"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button>
         </div>
       </div>
       <div class="stats-hero" id="stats-hero"></div>
@@ -1413,7 +1755,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="main">
     <div class="nudges" id="nudges"></div>
 
     <section class="chart-card" id="chart-card" hidden>
@@ -1435,7 +1777,7 @@
     <section class="history" id="history"></section>
   </main>
 
-  <button id="fab" aria-label="Tambah catatan">+</button>
+  <button id="fab" aria-label="Tambah catatan"><svg class="ico ico-lg ico-bold" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 
   <div class="toasts" id="toasts">
     <div id="toast-polite" role="status" aria-live="polite"></div>
@@ -1446,11 +1788,11 @@
     <div class="modal">
       <div class="grab" aria-hidden="true"></div>
       <header>
-        <h2 id="form-title">Catat Pengisian</h2>
+        <h2 id="form-title">Catat pengisian</h2>
       </header>
       <form id="entry-form" novalidate>
         <details class="explainer" id="method-explainer">
-          <summary>ℹ️ Cara ukur</summary>
+          <summary><svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span>Cara ukur</span><svg class="ico ico-sm chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
           <div class="explainer-body">
             Isi tangki sampai penuh → catat angka KM → pakai motor seperti biasa → isi penuh lagi →
             masukkan jarak yang ditempuh dan liter yang masuk. Hasilnya konsumsi sebenarnya, bukan tebakan.
@@ -1467,22 +1809,22 @@
 
         <label for="odometer" id="odometer-field" hidden>
           Odometer sekarang (km)
-          <input type="text" inputmode="decimal" id="odometer" name="odometer" placeholder="Angka odometer saat isi">
+          <input type="text" inputmode="decimal" id="odometer" name="odometer" autocomplete="off" spellcheck="false" placeholder="Misal: 12.480">
           <div class="hint" id="odometer-derived"></div>
           <div class="error" id="odometer-error" aria-live="polite"></div>
         </label>
 
         <label for="distance" id="distance-field">
-          Jarak Tempuh (km)
-          <input type="text" inputmode="decimal" id="distance" name="distance" placeholder="Dari isi penuh ke isi penuh">
+          Jarak tempuh (km)
+          <input type="text" inputmode="decimal" id="distance" name="distance" autocomplete="off" spellcheck="false" placeholder="Misal: 168,5">
           <div class="error" id="distance-error" aria-live="polite"></div>
         </label>
 
         <details class="map-helper" id="map-helper">
-          <summary>Ambil jarak dari Google Maps</summary>
+          <summary><span>Ambil jarak dari Google Maps</span><svg class="ico ico-sm chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
           <div class="map-body">
             <div class="helper-actions" id="map-helper-actions">
-              <a class="secondary-link" id="map-helper-open" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Buka Google Maps</a>
+              <a class="secondary-link" id="map-helper-open" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer"><span>Buka Google Maps</span><svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg></a>
               <button type="button" class="secondary" id="map-helper-paste">Tempel &amp; Isi</button>
             </div>
             <div class="helper-hint">Salin jarak dari Google Maps, contoh: 12,3 km. Bisa tempel langsung di kolom jarak atau klik Tempel &amp; Isi.</div>
@@ -1503,19 +1845,19 @@
 
         <label for="cost">
           <span class="lbl">Uang yang dibayar (Rp) <span class="opt">opsional</span></span>
-          <input type="text" inputmode="numeric" id="cost" name="cost" autocomplete="off" placeholder="Misal: 30rb">
+          <input type="text" inputmode="numeric" id="cost" name="cost" autocomplete="off" spellcheck="false" placeholder="Misal: 30rb atau 30000">
           <div class="error" id="cost-error" aria-live="polite"></div>
         </label>
 
         <label for="price">
           <span class="lbl">Harga per liter (Rp) <span class="opt">opsional</span></span>
-          <input type="text" inputmode="numeric" id="price" name="price" autocomplete="off" placeholder="Otomatis dari jenis BBM">
+          <input type="text" inputmode="numeric" id="price" name="price" autocomplete="off" spellcheck="false" placeholder="Otomatis dari jenis BBM…">
           <div class="error" id="price-error" aria-live="polite"></div>
         </label>
 
         <label for="fuel">
-          BBM untuk Isi Penuh (L)
-          <input type="text" inputmode="decimal" id="fuel" name="fuel" autocomplete="off" placeholder="Berapa liter sampai tangki penuh lagi">
+          BBM untuk isi penuh (L)
+          <input type="text" inputmode="decimal" id="fuel" name="fuel" autocomplete="off" spellcheck="false" placeholder="Misal: 4,2">
           <div class="preview" id="fuel-preview"></div>
           <div class="error" id="fuel-error" aria-live="polite"></div>
         </label>
@@ -1530,12 +1872,12 @@
 
         <label for="date">
           Tanggal
-          <input type="date" id="date" name="date" required>
+          <input type="date" id="date" name="date" autocomplete="off" required>
           <div class="error" id="date-error" aria-live="polite"></div>
         </label>
         <label for="notes">
-          Catatan (opsional)
-          <textarea id="notes" name="notes" maxlength="200" placeholder="Misal: Full throttle test"></textarea>
+          <span class="lbl">Catatan <span class="opt">opsional</span></span>
+          <textarea id="notes" name="notes" maxlength="200" placeholder="Misal: habis servis, ban baru…"></textarea>
           <div class="error" id="notes-error" aria-live="polite"></div>
         </label>
         <div class="actions">
@@ -1615,8 +1957,8 @@
       <div class="sheet-title" id="action-sheet-title">Catatan</div>
       <div class="sheet-text" id="action-sheet-sub"></div>
       <div class="sheet-list">
-        <button type="button" class="sheet-item" id="action-edit" autofocus>✏️ Edit catatan</button>
-        <button type="button" class="sheet-item danger" id="action-delete">🗑️ Hapus</button>
+        <button type="button" class="sheet-item" id="action-edit" autofocus><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Edit catatan</span></button>
+        <button type="button" class="sheet-item danger" id="action-delete"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6M10 11v6M14 11v6"/></svg><span>Hapus</span></button>
         <button type="button" class="sheet-item muted" id="action-cancel">Batal</button>
       </div>
     </div>
@@ -1649,7 +1991,7 @@
   <script>
     /* ============================== CONFIG ============================== */
 
-    const APP_VERSION = '2.1.0';
+    const APP_VERSION = '2.2.0';
     const SCHEMA_VERSION = 2;
     // Legacy key name kept deliberately (app was renamed Fuel Tracker -> Iritku)
     // so existing users' localStorage data keeps loading after the update.
@@ -1659,6 +2001,35 @@
     const BACKUP_NUDGE_MIN_ENTRIES = 20;
 
     const FUEL_TYPES = ['Pertalite', 'Pertamax', 'Pertamax Turbo', 'Dexlite', 'Shell Super', 'Shell V-Power', 'BP 92', 'Lainnya'];
+
+    // Each grade wears the colour it wears at the pump, so a glance at the
+    // history reads as fuel grades rather than as decoration.
+    const FUEL_TONES = {
+      'Pertalite': 'var(--fuel-green)',
+      'Pertamax': 'var(--fuel-blue)',
+      'Pertamax Turbo': 'var(--fuel-red)',
+      'Dexlite': 'var(--fuel-cyan)',
+      'Shell Super': 'var(--fuel-amber)',
+      'Shell V-Power': 'var(--fuel-red)',
+      'BP 92': 'var(--fuel-green)',
+      'Lainnya': 'var(--fuel-slate)',
+    };
+
+    // One icon set, one 24px grid, one stroke weight, recoloured by currentColor.
+    const ICONS = {
+      gear: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+      sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+      moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>',
+      auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"/>',
+      dots: '<circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+      x: '<path d="M18 6 6 18M6 6l12 12"/>',
+      alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/>',
+      spark: '<path d="M3 17 9 11l4 4 8-8"/><path d="M15 7h6v6"/>',
+    };
+
+    function ico(name, cls = 'ico') {
+      return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+    }
 
     const DEFAULT_FUEL_PRICES = {
       'Pertalite': 10000,
@@ -1806,6 +2177,7 @@
       chartPoints: [],
       scrubIndex: null,
       chartReveal: 1,
+      chartAnimKey: null,
       animateList: true,
       flashId: null,
       heroKey: null,
@@ -2408,8 +2780,11 @@
         ? `<button type="button" class="toast-action" data-toast-action>${escapeHtml(opts.actionLabel)}</button>`
         : '';
       node.innerHTML = `<span class="toast-msg">${escapeHtml(message)}</span>${action}`
-        + `<button type="button" class="toast-close" data-toast-close aria-label="Tutup">✕</button>`;
+        + `<button type="button" class="toast-close" data-toast-close aria-label="Tutup">${ico('x', 'ico ico-sm')}</button>`;
       region.appendChild(node);
+      // Transition in from the mounted state so a dismissal mid-entrance
+      // retargets instead of restarting, the way a keyframe would.
+      requestAnimationFrame(() => node.classList.add('is-in'));
 
       const duration = opts.duration || TOAST_MS[tone] || TOAST_MS.info;
       const entry = { node, action: opts.action || null, onExpire: opts.onExpire || null, timer: null };
@@ -2466,8 +2841,9 @@
         : '';
       const close = item.persistent
         ? ''
-        : `<button type="button" class="nudge-close" data-nudge-dismiss="${escapeHtml(item.key)}" aria-label="Tutup pesan">✕</button>`;
-      return `<div class="nudge ${escapeHtml(item.tone)}"><div class="nudge-text">${escapeHtml(item.message)}</div>${action}${close}</div>`;
+        : `<button type="button" class="nudge-close" data-nudge-dismiss="${escapeHtml(item.key)}" aria-label="Tutup pesan">${ico('x', 'ico ico-sm')}</button>`;
+      const mark = item.tone === 'danger' || item.tone === 'warning' ? ico('alert', 'ico ico-sm nudge-mark') : '';
+      return `<div class="nudge ${escapeHtml(item.tone)}">${mark}<div class="nudge-text">${escapeHtml(item.message)}</div>${action}${close}</div>`;
     }
 
     function renderNudges() {
@@ -2542,7 +2918,7 @@
           items.push({
             key: 'install-ios',
             tone: 'info',
-            message: 'Pasang: tap tombol Bagikan lalu "Tambah ke Layar Utama".',
+            message: 'Pasang: tap tombol Bagikan lalu \u201cTambah ke Layar Utama\u201d.',
             persistent: false,
           });
         }
@@ -2590,13 +2966,26 @@
       }
       const start = performance.now();
       const step = (now) => {
-        const t = Math.min(1, (now - start) / 500);
+        const t = Math.min(1, (now - start) / 400);
         const eased = 1 - Math.pow(1 - t, 3);
         node.textContent = format(from + (to - from) * eased);
         if (t < 1) state.heroRaf = requestAnimationFrame(step);
         else state.heroRaf = null;
       };
       state.heroRaf = requestAnimationFrame(step);
+    }
+
+    // The one strip of colour that is always on screen should mean something:
+    // it carries the direction of the 30-day trend, not a decorative gradient.
+    function paintTrendBar(delta, goodWhen) {
+      const root = document.documentElement;
+      if (delta === null || !isFinite(delta) || Math.abs(delta) < 0.1) {
+        root.style.setProperty('--trend', 'var(--primary)');
+        return;
+      }
+      const up = delta > 0;
+      const good = up ? goodWhen === 'up' : goodWhen === 'down';
+      root.style.setProperty('--trend', good ? 'var(--success)' : 'var(--danger)');
     }
 
     function renderStats() {
@@ -2631,6 +3020,18 @@
 
       const delta = entries.length ? heroDelta(entries, hero.key) : null;
       const chip = deltaChip(delta, hero.goodWhen);
+      paintTrendBar(delta, hero.goodWhen);
+
+      // With no data the header was five dashes competing with the one thing
+      // the screen is for. Empty means the tagline and nothing else.
+      elements.header.classList.toggle('is-empty', entries.length === 0);
+      if (!entries.length) {
+        elements.statsHero.innerHTML = '<div class="hero-tagline">Catat bensin, tahu Rp/km.</div>';
+        elements.stats.innerHTML = '';
+        state.heroKey = null;
+        state.heroValue = null;
+        return;
+      }
       const subline = entries.length
         ? `${escapeHtml(hero.sub)}${chip ? ` <span aria-hidden="true">·</span> ${chip} <span>vs 30 hari lalu</span>` : ''}`
         : 'Belum ada pengisian';
@@ -2700,8 +3101,26 @@
       elements.monthly.innerHTML = `<h2 class="section-title">Per bulan</h2>${rows}`;
     }
 
-    function ratioColor(value) {
+    // Absolute thresholds are useless in practice: every motorcycle sits above
+    // 25 km/L and every car below it, so the badge was one colour forever.
+    // Once there is enough history the tone reads against the rider's own
+    // median instead, which is the only baseline that means anything.
+    const RATIO_BASELINE_MIN = 4;
+
+    function ratioBaseline() {
+      const ratios = [];
+      state.derived.forEach((d) => { if (d && d.ratio !== null) ratios.push(d.ratio); });
+      return ratios.length >= RATIO_BASELINE_MIN ? median(ratios) : null;
+    }
+
+    function ratioColor(value, baseline = null) {
       if (value === null) return 'var(--muted)';
+      if (baseline !== null && baseline > 0) {
+        const rel = (value - baseline) / baseline;
+        if (rel >= 0.04) return 'var(--success)';
+        if (rel <= -0.04) return 'var(--danger)';
+        return 'var(--muted)';
+      }
       if (value >= 25) return 'var(--success)';
       if (value >= 15) return 'var(--warning)';
       return 'var(--danger)';
@@ -2770,6 +3189,7 @@
       }
 
       const deltas = ratioDeltas(entries);
+      const baseline = ratioBaseline();
       const stagger = state.animateList && !prefersReducedMotion();
       const html = entries.map((entry, index) => {
         const derived = state.derived.get(entry.id) || { ratio: null, costPerKm: null };
@@ -2786,9 +3206,11 @@
         ];
         if (entry.fuelCost) facts.push(escapeHtml(formatRupiah(entry.fuelCost)));
 
+        // The badge already states the ratio; restating it as 1:x is noise.
         const meta = [];
-        if (ratio !== null) meta.push(`1:${escapeHtml(formatNumber(ratio, { maximumFractionDigits: 1 }))}`);
-        if (entry.fuelType) meta.push(escapeHtml(entry.fuelType));
+        if (entry.fuelType) {
+          meta.push(`<span class="fuel-tag" style="--fuel:${FUEL_TONES[entry.fuelType] || 'var(--fuel-slate)'}">${escapeHtml(entry.fuelType)}</span>`);
+        }
         if (derived.costPerKm !== null) meta.push(`${escapeHtml(formatRpPerKm(derived.costPerKm))}/km`);
         if (entry.isPartialFill) meta.push(`<span class="tag">Isi sebagian</span>`);
 
@@ -2800,7 +3222,7 @@
         return `
           <article class="${classes.join(' ')}" data-id="${escapeHtml(entry.id)}"
             tabindex="0" role="button" aria-label="Edit catatan ${escapeHtml(label)}"
-            style="--tone:${ratioColor(ratio)};--i:${Math.min(index, 8)}">
+            style="--tone:${ratioColor(ratio, baseline)};--i:${Math.min(index, 8)}">
             <div class="badge num">${badge}</div>
             <div class="card-main">
               <div class="card-date">${escapeHtml(label)}</div>
@@ -2810,7 +3232,7 @@
             </div>
             <div class="card-trail">
               ${deltaChip(deltas.has(entry.id) ? deltas.get(entry.id) : null, 'up')}
-              <button type="button" class="card-menu" aria-label="Aksi untuk catatan ${escapeHtml(label)}">⋯</button>
+              <button type="button" class="card-menu" aria-label="Aksi untuk catatan ${escapeHtml(label)}">${ico('dots')}</button>
             </div>
           </article>`;
       }).join('');
@@ -2878,17 +3300,16 @@
 
       const total = state.data.entries.length;
       elements.chartCard.hidden = total === 0;
-      if (!total) return;
+      if (!total) { state.chartAnimKey = null; return; }
 
       if (points.length < 3) {
+        state.chartAnimKey = null;
         elements.chartWrap.hidden = true;
         elements.chartNote.hidden = true;
         elements.chartPlaceholder.hidden = false;
         const need = Math.max(1, 3 - points.length);
         elements.chartPlaceholder.innerHTML = `
-          <svg class="spark" width="72" height="36" viewBox="0 0 72 36" fill="none" aria-hidden="true">
-            <path d="M2 30 L20 18 L38 24 L56 8 L70 14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          ${ico('spark', 'ico spark')}
           <div>Butuh ${need} pengisian lagi untuk melihat tren.</div>`;
         return;
       }
@@ -2903,7 +3324,12 @@
         `Grafik ${state.chartSeries === 'cost' ? 'biaya per kilometer' : 'konsumsi km per liter'} dari ${points.length} pengisian terakhir. Rata-rata ${chartValueText(avg, state.chartSeries)}.`
       );
 
-      if (prefersReducedMotion()) {
+      // The reveal explains the chart the first time it appears and when the
+      // series changes. Replaying it on every save would charge that cost on a
+      // high-frequency action for nothing.
+      const firstLook = state.chartAnimKey !== state.chartSeries;
+      state.chartAnimKey = state.chartSeries;
+      if (prefersReducedMotion() || !firstLook) {
         state.chartReveal = 1;
         drawChart();
       } else {
@@ -2917,7 +3343,7 @@
       const start = performance.now();
       state.chartReveal = 0;
       const step = (now) => {
-        const t = Math.min(1, (now - start) / 500);
+        const t = Math.min(1, (now - start) / 420);
         state.chartReveal = 1 - Math.pow(1 - t, 3);
         drawChart();
         if (t < 1) chartRevealRaf = requestAnimationFrame(step);
@@ -3189,7 +3615,7 @@
     }
 
     function fillFuelTypeOptions() {
-      elements.fuelType.innerHTML = ['<option value="">- pilih -</option>']
+      elements.fuelType.innerHTML = ['<option value="">Pilih jenis BBM…</option>']
         .concat(FUEL_TYPES.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`))
         .join('');
     }
@@ -3347,7 +3773,8 @@
         if (!el) return;
         const show = state.submitted || state.touched[key] === true;
         const message = show ? (state.formErrors[key] || '') : '';
-        el.textContent = message;
+        // Red alone is not a channel: the mark reads as an error without colour.
+        el.innerHTML = message ? `${ico('alert', 'ico ico-sm')}<span>${escapeHtml(message)}</span>` : '';
         const input = document.getElementById(key);
         if (!input) return;
         if (message) {
@@ -3377,7 +3804,7 @@
         return;
       }
       const ratio = distance / fuel;
-      node.style.setProperty('--tone', ratioColor(ratio));
+      node.style.setProperty('--tone', ratioColor(ratio, ratioBaseline()));
       const shown = formatNumber(ratio, { maximumFractionDigits: 1 });
       const parts = [`≈ ${shown} km/L`, `1:${shown}`];
       const cost = parseRupiah(elements.cost.value);
@@ -3447,7 +3874,7 @@
       elements.mapError.textContent = '';
       elements.mapHelper.open = false;
 
-      elements.formTitle.textContent = entry ? 'Edit Catatan' : 'Catat Pengisian';
+      elements.formTitle.textContent = entry ? 'Edit catatan' : 'Catat pengisian';
       elements.submit.textContent = entry ? 'Perbarui' : 'Simpan';
 
       applyFormMode();
@@ -3724,7 +4151,7 @@
           <div class="onboard-slide">
             ${MARK_SVG}
             <h2 id="onboard-title">Tahu biaya per kilometer</h2>
-            <p>Bukan cuma "boros" atau "irit". Lihat berapa rupiah yang keluar tiap km dan apakah bulan ini lebih mahal dari bulan lalu.</p>
+            <p>Bukan cuma “boros” atau “irit”. Lihat berapa rupiah yang keluar tiap km dan apakah bulan ini lebih mahal dari bulan lalu.</p>
           </div>`;
       }
       if (step === 1) {
@@ -3747,7 +4174,7 @@
           <label for="onboard-fuel" style="width:100%;max-width:20rem">
             BBM yang biasa dipakai
             <select id="onboard-fuel">
-              <option value="">- pilih -</option>
+              <option value="">Pilih jenis BBM…</option>
               ${FUEL_TYPES.map((type) => `<option value="${escapeHtml(type)}"${settings.lastFuelType === type ? ' selected' : ''}>${escapeHtml(type)}</option>`).join('')}
             </select>
           </label>
@@ -3994,8 +4421,11 @@
       if (elements.priceSettings.childElementCount !== FUEL_TYPES.length) {
         elements.priceSettings.innerHTML = FUEL_TYPES.map((type) => `
           <div class="price-row">
-            <span>${escapeHtml(type)}</span>
-            <input type="text" inputmode="numeric" data-fuel-type="${escapeHtml(type)}" aria-label="Harga ${escapeHtml(type)}">
+            <span class="fuel-tag" style="--fuel:${FUEL_TONES[type] || 'var(--fuel-slate)'}">${escapeHtml(type)}</span>
+            <span class="price-field">
+              <span class="price-prefix" aria-hidden="true">Rp</span>
+              <input type="text" inputmode="numeric" autocomplete="off" spellcheck="false" data-fuel-type="${escapeHtml(type)}" aria-label="Harga ${escapeHtml(type)} per liter">
+            </span>
           </div>`).join('');
       }
       elements.priceSettings.querySelectorAll('input[data-fuel-type]').forEach((input) => {
@@ -4029,7 +4459,7 @@
       }
       navigator.storage.estimate().then((estimate) => {
         const toMb = (bytes) => formatNumber((bytes || 0) / 1048576, { maximumFractionDigits: 1 });
-        elements.storageInfo.textContent = `Penyimpanan terpakai ${toMb(estimate.usage)} MB dari ${toMb(estimate.quota)} MB.`;
+        elements.storageInfo.textContent = `Penyimpanan terpakai ${toMb(estimate.usage)}\u00a0MB dari ${toMb(estimate.quota)}\u00a0MB.`;
       }).catch(() => {
         elements.storageInfo.textContent = '';
       });
@@ -4040,7 +4470,7 @@
     function applyMapDistance() {
       const parsed = parseDecimal(elements.distance.value);
       if (parsed === null || parsed <= 0) {
-        elements.mapError.textContent = 'Tidak bisa baca jarak. Gunakan format "12,3 km".';
+        elements.mapError.textContent = 'Tidak bisa baca jarak. Gunakan format \u201c12,3 km\u201d.';
         return false;
       }
       elements.mapError.textContent = '';
@@ -4665,12 +5095,26 @@
 
     function updateThemeToggleLabel(setting, eff) {
       if (!elements.themeToggle) return;
-      const icon = setting === 'auto' ? '🌓' : setting === 'dark' ? '🌙' : '☀️';
+      const icon = setting === 'auto' ? 'auto' : setting === 'dark' ? 'moon' : 'sun';
       const label = setting === 'auto'
         ? `Tema: Auto (${eff === 'dark' ? 'Gelap' : 'Terang'})`
         : `Tema: ${setting === 'dark' ? 'Gelap' : 'Terang'}`;
-      elements.themeToggle.textContent = icon;
+      elements.themeToggle.innerHTML = ico(icon);
       elements.themeToggle.setAttribute('aria-label', `${label}. Klik untuk ganti`);
+    }
+
+    // A theme flip repaints colour, background, border and shadow on nearly every
+    // element. Without this, every transition on those properties fires together
+    // and the switch reads as a slow smear rather than an instant change.
+    function withoutTransitions(apply) {
+      const style = document.createElement('style');
+      style.append(document.createTextNode('*,*::before,*::after{transition:none !important}'));
+      document.head.append(style);
+      apply();
+      // Read a layout property to force the new colours to commit while the
+      // override still applies, then drop it once that paint has landed.
+      void document.body.offsetHeight;
+      requestAnimationFrame(() => requestAnimationFrame(() => style.remove()));
     }
 
     function cycleTheme() {
@@ -4679,14 +5123,14 @@
       const current = state.data.settings.darkMode || 'auto';
       state.data.settings.darkMode = order[(order.indexOf(current) + 1) % order.length];
       saveData();
-      setThemeAttributes();
+      withoutTransitions(setThemeAttributes);
     }
 
     function bindThemeWatcher() {
       if (!window.matchMedia) return;
       state.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       state.mediaQuery.addEventListener('change', () => {
-        if (state.data && state.data.settings.darkMode === 'auto') setThemeAttributes();
+        if (state.data && state.data.settings.darkMode === 'auto') withoutTransitions(setThemeAttributes);
       });
     }
 
