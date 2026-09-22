@@ -42,8 +42,12 @@ Seluruh antarmukanya berbahasa Indonesia.
 - **Grafik tren.** Grafik canvas km/L atau Rp/km dengan scrub sentuh, moving
   average, dan pewarnaan berdasar ambang batas — digambar sendiri, tanpa
   library chart.
-- **Riwayat berkode warna.** Tiap kartu pengisian ditandai hijau/kuning/merah
-  sesuai efisiensi, jadi tangki yang boros langsung kelihatan.
+- **Riwayat berkode warna.** Setelah minimal empat tangki penuh, tiap kartu
+  ditandai hijau atau merah dibanding median kamu sendiri — jadi warnanya
+  berarti "lebih irit atau lebih boros dari biasanya", bukan ambang batas yang
+  dipatok untuk kendaraan orang lain. Di bawah itu, ambang absolut dipakai.
+- **Jenis BBM pakai warnanya sendiri.** Pertalite, Pertamax, Turbo dan lainnya
+  memakai warna yang sama seperti di pom, di riwayat maupun di Pengaturan.
 
 ### Keamanan data
 
@@ -211,5 +215,9 @@ Dua hal masih di luar jangkauan perubahan kode:
 ## Lisensi
 
 MIT — lihat [LICENSE](LICENSE).
+
+Typeface yang dipakai, [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans)
+buatan Tokotype, berlisensi terpisah di bawah SIL Open Font License 1.1 — lihat
+[docs/FONT-LICENSE.txt](docs/FONT-LICENSE.txt).
 
 Versi Bahasa Inggris dokumen ini: [`README.md`](README.md).

@@ -41,8 +41,12 @@ The interface is entirely in Bahasa Indonesia.
   poisoning the average.
 - **Trend chart.** A canvas chart of km/L or Rp/km with touch scrubbing, a
   moving average, and threshold colouring — drawn by hand, no chart library.
-- **Colour-coded history.** Each fill-up card is marked green/amber/red by
-  efficiency so a bad tank is visible at a glance.
+- **Colour-coded history.** Once there are at least four full tanks, each
+  fill-up card is marked green or red against your own median — so the colour
+  means "better or worse than your usual", not a threshold picked for someone
+  else's vehicle. Below that it falls back to absolute thresholds.
+- **Fuel grades wear their own colours.** Pertalite, Pertamax, Turbo and the
+  rest carry the colour they wear at the pump, in the history and in Settings.
 
 ### Data safety
 
@@ -202,5 +206,9 @@ Two things remain outside what a code change can do:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+The embedded typeface, [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans)
+by Tokotype, is licensed separately under the SIL Open Font License 1.1 — see
+[docs/FONT-LICENSE.txt](docs/FONT-LICENSE.txt).
 
 Bahasa Indonesia version of this document: [`README-id.md`](README-id.md).
