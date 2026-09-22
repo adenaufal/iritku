@@ -207,4 +207,8 @@ Two things remain outside what a code change can do:
 
 MIT — see [LICENSE](LICENSE).
 
+The embedded typeface, [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans)
+by Tokotype, is licensed separately under the SIL Open Font License 1.1 — see
+[docs/FONT-LICENSE.txt](docs/FONT-LICENSE.txt).
+
 Bahasa Indonesia version of this document: [`README-id.md`](README-id.md).

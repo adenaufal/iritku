@@ -13,8 +13,8 @@ wins.
 ## Architecture (non-negotiable)
 
 - **`index.html` is the entire app** — inline `<style>` and a single inline
-  `<script>` (~line 1649 onward), no build step, no bundler, no npm, no
-  external CSS/JS/font/image requests. Edit it directly.
+  `<script>`, no build step, no bundler, no npm, no external CSS/JS/font/image
+  requests. Edit it directly.
 - **`sw.js` is the one permitted sibling script.** A service worker cannot be
   registered from a Blob or `data:` URL — the spec requires a real same-origin
   script URL — so this one file has to exist on disk. Do not add a third
@@ -78,6 +78,18 @@ wins.
 
 Changes to the UI go through these; none of them is decorative.
 
+- **Typeface: Plus Jakarta Sans**, embedded as a `data:` URI `@font-face` at the
+  top of the `<style>` block (variable `wght 200-800`, latin subset, ~27 KB).
+  It is inline because the CSP is `default-src 'none'` — a Google Fonts link
+  would simply be refused. `font-src data:` exists in the CSP for exactly this.
+  Never swap it for a network request.
+  - Licence: SIL OFL 1.1, text vendored at `docs/FONT-LICENSE.txt`; keep the
+    copyright comment above the `@font-face` if the font stays.
+  - **The latin subset has holes.** No `U+2192` (→) and no `U+2248` (≈). Any
+    glyph outside the subset silently falls back to a system face and renders
+    at the wrong weight beside the rest. The arrows `U+2191`/`U+2193` (↑ ↓) are
+    present and are what the delta chips use. Before adding a symbol to any
+    user-facing string, check it against the font's cmap.
 - **No emoji in the interface.** Every icon comes from the `ICONS` map in the
   inline script (or the matching inline `<svg class="ico">` in the static
   markup): one 24px grid, `currentColor`, `stroke-width: 1.75` (`2` beside bold
@@ -183,11 +195,32 @@ No test runner, no CI. Before declaring a change done:
    `grep -n "transition: all\|transform: scale" index.html` plus a scan for
    emoji in `button`/`summary` text for design-system drift.
 
+5. **Check every renderable character against the font.** A glyph outside the
+   embedded latin subset falls back silently and looks wrong next to the rest:
+
+   ```bash
+   pip install fonttools brotli
+   python3 - <<'PY'
+   import re, base64, io
+   from fontTools.ttLib import TTFont
+   html = open('index.html').read()
+   b64 = re.search(r'base64,([A-Za-z0-9+/=]+)', html).group(1)
+   cmap = set(TTFont(io.BytesIO(base64.b64decode(b64))).getBestCmap())
+   body = re.sub(r'base64,[A-Za-z0-9+/=]+', '', html)
+   body = re.sub(r'/\*.*?\*/', '', body, flags=re.S)
+   miss = {c: body.count(c) for c in set(body)
+           if 0x20 <= ord(c) != 0x7f and ord(c) not in cmap}
+   miss.pop('\ufeff', None)  # deliberate BOM on the CSV export
+   print(miss or 'all characters covered')
+   PY
+   ```
+
 ## Repository layout
 
 ```
 /            index.html, sw.js, README.md, README-id.md, AGENTS.md, LICENSE, .gitignore
-/docs        ROADMAP.md, ROADMAP-id.md, SPEC.md (historical v1), screenshots/
+/docs        ROADMAP.md, ROADMAP-id.md, SPEC.md (historical v1), screenshots/,
+             FONT-LICENSE.txt (SIL OFL 1.1 for the embedded typeface)
 ```
 
 - READMEs are mirrored EN/ID and must stay content-equivalent — change one,

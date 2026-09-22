@@ -216,4 +216,8 @@ Dua hal masih di luar jangkauan perubahan kode:
 
 MIT — lihat [LICENSE](LICENSE).
 
+Typeface yang dipakai, [Plus Jakarta Sans](https://github.com/tokotype/PlusJakartaSans)
+buatan Tokotype, berlisensi terpisah di bawah SIL Open Font License 1.1 — lihat
+[docs/FONT-LICENSE.txt](docs/FONT-LICENSE.txt).
+
 Versi Bahasa Inggris dokumen ini: [`README.md`](README.md).
